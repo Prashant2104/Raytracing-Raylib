@@ -15,69 +15,59 @@ namespace Utils {
 CustomCamera::CustomCamera(float verticalFOV, float nearClip, float farClip)
     : m_VerticalFOV(verticalFOV), m_NearClip(nearClip), m_FarClip(farClip)
 {
-    m_ForwardDirection = { 0, 0, -1 };
-    m_Position = { 0, 0, 3 };
+    m_ForwardDirection = { 0.0f, 0.0f, -1.0f };
+    m_Position = { 0.0f, 0.0f, 3.0f };
 }
 
 void CustomCamera::OnUpdate(float ts)
 {
-    Vector2 mousePos = GetMousePosition();
-    Vector2 delta = (mousePos - m_LastMousePosition) * 0.002f;
-    m_LastMousePosition = mousePos;
+    Vector2 delta = GetMouseDelta() * 0.002f;
 
-    if (!IsMouseButtonDown(0))
+    if (!IsMouseButtonDown(1))
     {
-        EnableCursor();
+        if(IsCursorHidden())
+            EnableCursor();
         return;
     }
-    DisableCursor();
+    if (!IsCursorHidden())
+        DisableCursor();
 
     bool moved = false;
 
     Vector3 rightDirection = Vector3CrossProduct(m_ForwardDirection, Vector3UnitY);
 
-    float speed = 5.0f;
+    float speed = 50.0f;
 
     // Movement
-    int keyPressed = GetKeyPressed();
-    switch (keyPressed)
+    if (IsKeyDown(KEY_W))
     {
-    case KEY_LEFT:
-    case KEY_A:
-        m_Position -= rightDirection * speed * ts;
-        moved = true;
-        break;
-
-    case KEY_RIGHT:
-    case KEY_D:
-        m_Position += rightDirection * speed * ts;
-        moved = true;
-        break;
-
-    case KEY_DOWN:
-    case KEY_S:
-        m_Position -= m_ForwardDirection * speed * ts;
-        moved = true;
-        break;
-
-    case KEY_UP:
-    case KEY_W:
         m_Position += m_ForwardDirection * speed * ts;
         moved = true;
-        break;
-
-    case KEY_Q:
+    }
+    else if (IsKeyDown(KEY_S))
+    {
+        m_Position -= m_ForwardDirection * speed * ts;
+        moved = true;
+    }
+    if (IsKeyDown(KEY_A))
+    {
+        m_Position -= rightDirection * speed * ts;
+        moved = true;
+    }
+    else if (IsKeyDown(KEY_D))
+    {
+        m_Position += rightDirection * speed * ts;
+        moved = true;
+    }
+    if (IsKeyDown(KEY_Q))
+    {
         m_Position -= Vector3UnitY * speed * ts;
         moved = true;
-        break;
-
-    case KEY_E:
+    }
+    else if (IsKeyDown(KEY_E))
+    {
         m_Position += Vector3UnitY * speed * ts;
         moved = true;
-        break;
-
-    default:
-        break;
     }
 
     // Rotation

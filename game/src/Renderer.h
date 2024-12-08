@@ -1,24 +1,25 @@
 #pragma once
 #include "raylib.h"
+#include "CustomCamera.h"
 #include <iostream>
 
 class Renderer {
 public:
     Renderer();
 
-    void OnResize();
-    void Render() const;
+    void OnResize(const CustomCamera& camera);
+    void Render(const CustomCamera& camera);
     void ChangeColor();
 
 private:
-    Vector4 TraceRay(Vector2 coord);
+    Vector4 TraceRay(const Ray& ray);
 
 private:
     Image m_FinalImage;
     Texture2D m_Texture2D;
     Vector3 m_SphereColor;
 
-    int m_ColorIndex = 0;
+    int m_ColorIndex;
     int m_ScreenWidth;
     int m_ScreenHeight;
 };

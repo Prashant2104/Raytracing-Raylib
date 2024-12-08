@@ -1,6 +1,7 @@
 #include "Renderer.h"
 #include "raymath.h"
 
+
 namespace Utils {
 
     static Vector4 Vector4Clamp(const Vector4& vector, Vector4 min, Vector4 max) {
@@ -17,12 +18,15 @@ namespace Utils {
 
 Renderer::Renderer()
 {
-    m_SphereColor = { 1.0f, 0.0f, 0.0f };
-    OnResize();
+    m_ColorIndex = 4;
+    ChangeColor();
 }
 
-void Renderer::OnResize()
+void Renderer::OnResize(const CustomCamera& camera)
 {
+    Ray ray;
+    ray.position = camera.GetPosition();
+
     m_ScreenWidth = GetScreenWidth();
     m_ScreenHeight = GetScreenHeight();
     if (IsImageValid(m_FinalImage))
@@ -37,11 +41,9 @@ void Renderer::OnResize()
     {
         for (int x = 0; x < m_ScreenWidth; x++)
         {
-            Vector2 coord = { (float)x / (float)m_FinalImage.width, (float)y / (float)m_FinalImage.height };
-            coord = Vector2SubtractValue((coord * 2.0f), 1.0f);  // Converting from  0 -> 1 to -1 -> 1
-            coord.x *= ((float)m_ScreenWidth / (float)m_ScreenHeight); //compensating for the aspect ratio
+            ray.direction = camera.GetRayDirections()[x + y * m_FinalImage.width];
 
-            Vector4 color = TraceRay(coord);
+            Vector4 color = TraceRay(ray);
             color = Utils::Vector4Clamp(color, Vector4Zero(), Vector4One());
             ImageDrawPixel(&m_FinalImage, x, y, ColorFromNormalized(color));
             //ImageDrawPixel(&m_FinalImage, x, y, GetColor(RayTracing::Random::UInt(0x000000ff, 0xffffffff)));
@@ -52,8 +54,23 @@ void Renderer::OnResize()
     m_Texture2D = LoadTextureFromImage(m_FinalImage);
 }
 
-void Renderer::Render() const
+void Renderer::Render(const CustomCamera& camera)
 {
+    Ray ray;
+    ray.position = camera.GetPosition();
+    for (int y = 0; y < m_ScreenHeight; y++)
+    {
+        for (int x = 0; x < m_ScreenWidth; x++)
+        {
+            ray.direction = camera.GetRayDirections()[x + y * m_FinalImage.width];
+
+            Vector4 color = TraceRay(ray);
+            color = Utils::Vector4Clamp(color, Vector4Zero(), Vector4One());
+            ImageDrawPixel(&m_FinalImage, x, y, ColorFromNormalized(color));
+            //ImageDrawPixel(&m_FinalImage, x, y, GetColor(RayTracing::Random::UInt(0x000000ff, 0xffffffff)));
+        }
+    }
+    UpdateTexture(m_Texture2D, m_FinalImage.data);
     DrawTexture(m_Texture2D, 0, 0, WHITE);
 }
 
@@ -81,24 +98,20 @@ void Renderer::ChangeColor()
         m_SphereColor = { 1.0f, 0.0f, 1.0f };
         break;
     }
-    OnResize();
+    //OnResize();
 }
 
-Vector4 Renderer::TraceRay(Vector2 coord)
-{   
-    Vector3 rayOrigin = { 0.0f, 0.0f, 1.0f };
-    Vector3 rayDirection = { coord.x, coord.y, -1.0f };
-    //rayDirection = Vector3Normalize(rayDirection);
+Vector4 Renderer::TraceRay(const Ray& ray)
+{
     float radius = 0.5f;
-
     //(bx^2 + by^2) * t^2 + (2(ax * bx + ay * by)) * t + (ax^2 + ay^2 - r^2) = 0
     //a = ray origin
     //b = ray direction
     //r = radius
     //t = hit distance
-    float a = Vector3DotProduct(rayDirection, rayDirection);
-    float b = 2.0f * Vector3DotProduct(rayOrigin, rayDirection);
-    float c = Vector3DotProduct(rayOrigin, rayOrigin) - (radius * radius);
+    float a = Vector3DotProduct(ray.direction, ray.direction);
+    float b = 2.0f * Vector3DotProduct(ray.position, ray.direction);
+    float c = Vector3DotProduct(ray.position, ray.position) - (radius * radius);
 
     //Quadratic formula
     //d = b^2 - 4 * a * c
@@ -114,7 +127,7 @@ Vector4 Renderer::TraceRay(Vector2 coord)
         (-b + sqrtf(d)) / (2.0f * a)
     };
 
-    Vector3 hitPos = rayOrigin + rayDirection * t[0];
+    Vector3 hitPos = ray.position + ray.direction * t[0];
     Vector3 normal = Vector3Normalize(hitPos);
 
     Vector3 lightDir = Vector3Normalize({ -1.0f, -1.0f, -1.0f });

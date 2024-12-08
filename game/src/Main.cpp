@@ -1,5 +1,6 @@
 #include "raylib.h"
 #include "Renderer.h"
+#include "CustomCamera.h"
 #include <iostream>
 
 //------------------------------------------------------------------------------------
@@ -18,15 +19,18 @@ int main(void)
     SetWindowState(FLAG_WINDOW_RESIZABLE);
 
     Renderer m_Renderer;
+    CustomCamera m_Camera(45.0f, 0.1f, 100.0f);
     //--------------------------------------------------------------------------------------
-
+    m_Camera.OnResize();
+    m_Renderer.OnResize(m_Camera);
     // Main game loop
     while (!WindowShouldClose())    // Detect window close button or ESC key
     {
         // Update
         //----------------------------------------------------------------------------------
         if (IsWindowResized()) {
-            m_Renderer.OnResize();
+            m_Camera.OnResize();
+            m_Renderer.OnResize(m_Camera);
         }
         if (IsKeyPressed(KEY_RIGHT))
             m_Renderer.ChangeColor();
@@ -39,7 +43,8 @@ int main(void)
         BeginDrawing();
         ClearBackground(BLACK);
 
-        m_Renderer.Render();
+        m_Renderer.Render(m_Camera);
+        m_Camera.OnUpdate(GetFrameTime());
 
         DrawText(fpsText, 10, 10, 30, WHITE);
         EndDrawing();
