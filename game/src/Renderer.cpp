@@ -57,6 +57,33 @@ void Renderer::Render() const
     DrawTexture(m_Texture2D, 0, 0, WHITE);
 }
 
+void Renderer::ChangeColor()
+{
+    m_ColorIndex = (m_ColorIndex+1) % 5;
+    switch (m_ColorIndex)
+    {
+    case 0:
+        m_SphereColor = { 1.0f, 0.0f, 0.0f };
+        break;
+    case 1:
+        m_SphereColor = { 0.0f, 1.0f, 0.0f };
+        break;
+    case 2:
+        m_SphereColor = { 0.0f, 0.0f, 1.0f };
+        break;
+    case 3:
+        m_SphereColor = { 1.0f, 1.0f, 1.0f };
+        break;
+    case 4:
+        m_SphereColor = { 1.0f, 0.0f, 1.0f };
+        break;
+    default:
+        m_SphereColor = { 1.0f, 0.0f, 1.0f };
+        break;
+    }
+    OnResize();
+}
+
 Vector4 Renderer::TraceRay(Vector2 coord)
 {   
     Vector3 rayOrigin = { 0.0f, 0.0f, 1.0f };

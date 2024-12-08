@@ -28,6 +28,8 @@ int main(void)
         if (IsWindowResized()) {
             m_Renderer.OnResize();
         }
+        if (IsKeyPressed(KEY_RIGHT))
+            m_Renderer.ChangeColor();
         int fps = GetFPS();
         sprintf(fpsText, "%d FPS", fps);
         //----------------------------------------------------------------------------------
