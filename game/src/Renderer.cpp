@@ -116,7 +116,7 @@ Vector4 Renderer::TraceRay(const Scene& scene, const Ray& ray) const
     float dot = Vector3DotProduct(normal, Vector3Negate(lightDir));
     float intensity = fmax(dot, 0.0f);
 
-    Vector3 sphereColor = closestSphere->Albedo * intensity;
+    Vector4 sphereColor = closestSphere->Albedo * intensity;
 
-    return Vector4{ sphereColor.x, sphereColor.y, sphereColor.z, 1.0f };
+    return Vector4{ sphereColor.x, sphereColor.y, sphereColor.z, sphereColor.w };
 }
