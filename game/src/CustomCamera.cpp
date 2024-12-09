@@ -17,6 +17,10 @@ CustomCamera::CustomCamera(float verticalFOV, float nearClip, float farClip)
 {
     m_ForwardDirection = { 0.0f, 0.0f, -1.0f };
     m_Position = { 0.0f, 0.0f, 3.0f };
+    
+    RecalculateView();
+    RecalculateRayDirections();
+    OnResize();
 }
 
 void CustomCamera::OnUpdate(float ts)
@@ -32,7 +36,7 @@ void CustomCamera::OnUpdate(float ts)
     if (!IsCursorHidden())
         DisableCursor();
 
-    bool moved = false;
+    m_IsMoving = false;
 
     Vector3 rightDirection = Vector3CrossProduct(m_ForwardDirection, Vector3UnitY);
 
@@ -42,32 +46,32 @@ void CustomCamera::OnUpdate(float ts)
     if (IsKeyDown(KEY_W))
     {
         m_Position += m_ForwardDirection * speed * ts;
-        moved = true;
+        m_IsMoving = true;
     }
     else if (IsKeyDown(KEY_S))
     {
         m_Position -= m_ForwardDirection * speed * ts;
-        moved = true;
+        m_IsMoving = true;
     }
     if (IsKeyDown(KEY_A))
     {
         m_Position -= rightDirection * speed * ts;
-        moved = true;
+        m_IsMoving = true;
     }
     else if (IsKeyDown(KEY_D))
     {
         m_Position += rightDirection * speed * ts;
-        moved = true;
+        m_IsMoving = true;
     }
     if (IsKeyDown(KEY_Q))
     {
         m_Position -= Vector3UnitY * speed * ts;
-        moved = true;
+        m_IsMoving = true;
     }
     else if (IsKeyDown(KEY_E))
     {
         m_Position += Vector3UnitY * speed * ts;
-        moved = true;
+        m_IsMoving = true;
     }
 
     // Rotation
@@ -81,12 +85,11 @@ void CustomCamera::OnUpdate(float ts)
             QuaternionFromAxisAngle(Vector3UnitY, -yawDelta)));
         m_ForwardDirection = Vector3RotateByQuaternion(m_ForwardDirection, q);
 
-        moved = true;
+        m_IsMoving = true;
     }
 
-    if (moved)
+    if (m_IsMoving)
     {
-        std::cout << delta.x <<" "<<delta.y << std::endl;
         RecalculateView();
         RecalculateRayDirections();
     }
@@ -103,12 +106,17 @@ void CustomCamera::OnResize()
 
 float CustomCamera::GetRotationSpeed()
 {
-    return 0.3f;
+    return 0.03f;
+}
+
+bool CustomCamera::IsCameraMoving() const
+{
+    return m_IsMoving;
 }
 
 void CustomCamera::RecalculateProjection()
 {
-    m_Projection = MatrixPerspective((DEG2RAD * m_VerticalFOV), (float)m_ViewportWidth / (float)m_ViewportHeight, m_NearClip, m_FarClip);
+    m_Projection = MatrixPerspective((0.01745329251994329576923690768489 * m_VerticalFOV), (float)m_ViewportWidth / (float)m_ViewportHeight, m_NearClip, m_FarClip);
     m_InverseProjection = MatrixInvert(m_Projection);
 }
 
@@ -129,15 +137,15 @@ void CustomCamera::RecalculateRayDirections()
         {
             Vector2 coord = { (float)x / (float)m_ViewportWidth, (float)y / (float)m_ViewportHeight };
             coord = Vector2SubtractValue((coord * 2.0f), 1.0f);  // Converting from  0 -> 1 to -1 -> 1
-            Vector4 target = QuaternionTransform(Vector4{ coord.x, coord.y, 1, 1 }, m_InverseProjection);
 
-            Vector3 normalizesTarget = Vector3{ target.x, target.y, target.z } / target.w;
-            normalizesTarget = Vector3Normalize(normalizesTarget);
+            Vector4 target = Vector4{ coord.x, coord.y, 1, 1 } * m_InverseProjection;
 
-            Quaternion inverseTarget = QuaternionTransform(Vector4{ normalizesTarget.x, normalizesTarget.y, normalizesTarget.z, 0 }, m_InverseView);
+            Vector3 normalizesTarget = Vector3Normalize(Vector3{ target.x, target.y, target.z } / target.w);
+
+            Quaternion inverseTarget = Vector4{ normalizesTarget.x, normalizesTarget.y, normalizesTarget.z, 0 } * m_InverseView;
+            Vector3 rayDirection = { inverseTarget.x, inverseTarget.y, inverseTarget.z };
 
             //Vector3 rayDirection = { coord.x, coord.y, -1.0f };
-            Vector3 rayDirection = { inverseTarget.x, inverseTarget.y, inverseTarget.z };
             m_RayDirections[x + y * m_ViewportWidth] = rayDirection;
         }
     }

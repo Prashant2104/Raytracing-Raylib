@@ -1,7 +1,6 @@
 #include "Renderer.h"
 #include "raymath.h"
 
-
 namespace Utils {
 
     static Vector4 Vector4Clamp(const Vector4& vector, Vector4 min, Vector4 max) {
@@ -18,15 +17,11 @@ namespace Utils {
 
 Renderer::Renderer()
 {
-    m_ColorIndex = 4;
-    ChangeColor();
+    OnResize();
 }
 
-void Renderer::OnResize(const CustomCamera& camera)
+void Renderer::OnResize()
 {
-    Ray ray;
-    ray.position = camera.GetPosition();
-
     m_ScreenWidth = GetScreenWidth();
     m_ScreenHeight = GetScreenHeight();
     if (IsImageValid(m_FinalImage))
@@ -35,28 +30,22 @@ void Renderer::OnResize(const CustomCamera& camera)
     }
     else
     {
-        m_FinalImage = GenImageColor(m_ScreenWidth, m_ScreenHeight, WHITE);
+        m_FinalImage = GenImageColor(m_ScreenWidth, m_ScreenHeight, RAYWHITE);
     }
-    for (int y = 0; y < m_ScreenHeight; y++) 
-    {
-        for (int x = 0; x < m_ScreenWidth; x++)
-        {
-            ray.direction = camera.GetRayDirections()[x + y * m_FinalImage.width];
-
-            Vector4 color = TraceRay(ray);
-            color = Utils::Vector4Clamp(color, Vector4Zero(), Vector4One());
-            ImageDrawPixel(&m_FinalImage, x, y, ColorFromNormalized(color));
-            //ImageDrawPixel(&m_FinalImage, x, y, GetColor(RayTracing::Random::UInt(0x000000ff, 0xffffffff)));
-        }
-    }
-    ImageFlipVertical(&m_FinalImage);
     UnloadTexture(m_Texture2D);
     m_Texture2D = LoadTextureFromImage(m_FinalImage);
 }
 
-void Renderer::Render(const CustomCamera& camera)
+void Renderer::OnSphereMove()
 {
-    Ray ray;
+    m_InitialRenderPass = false;
+}
+
+void Renderer::UpdateTextureBuffer(const Scene& scene, const CustomCamera& camera)
+{
+    if (!camera.IsCameraMoving() && m_InitialRenderPass) return;
+
+    Ray ray{};
     ray.position = camera.GetPosition();
     for (int y = 0; y < m_ScreenHeight; y++)
     {
@@ -64,77 +53,70 @@ void Renderer::Render(const CustomCamera& camera)
         {
             ray.direction = camera.GetRayDirections()[x + y * m_FinalImage.width];
 
-            Vector4 color = TraceRay(ray);
+            Vector4 color = TraceRay(scene, ray);
             color = Utils::Vector4Clamp(color, Vector4Zero(), Vector4One());
             ImageDrawPixel(&m_FinalImage, x, y, ColorFromNormalized(color));
-            //ImageDrawPixel(&m_FinalImage, x, y, GetColor(RayTracing::Random::UInt(0x000000ff, 0xffffffff)));
         }
     }
+    ImageFlipVertical(&m_FinalImage);
     UpdateTexture(m_Texture2D, m_FinalImage.data);
+    m_InitialRenderPass = true;
+}
+
+void Renderer::Render(const Scene& scene, const CustomCamera& camera)
+{
+    UpdateTextureBuffer(scene, camera);
     DrawTexture(m_Texture2D, 0, 0, WHITE);
 }
 
-void Renderer::ChangeColor()
+Vector4 Renderer::TraceRay(const Scene& scene, const Ray& ray) const
 {
-    m_ColorIndex = (m_ColorIndex+1) % 5;
-    switch (m_ColorIndex)
-    {
-    case 0:
-        m_SphereColor = { 1.0f, 0.0f, 0.0f };
-        break;
-    case 1:
-        m_SphereColor = { 0.0f, 1.0f, 0.0f };
-        break;
-    case 2:
-        m_SphereColor = { 0.0f, 0.0f, 1.0f };
-        break;
-    case 3:
-        m_SphereColor = { 1.0f, 1.0f, 1.0f };
-        break;
-    case 4:
-        m_SphereColor = { 1.0f, 0.0f, 1.0f };
-        break;
-    default:
-        m_SphereColor = { 1.0f, 0.0f, 1.0f };
-        break;
-    }
-    //OnResize();
-}
+    if(scene.Spheres.size() == 0)  return Vector4{ 0.9f, 0.9f, 0.9f, 1.0f };
 
-Vector4 Renderer::TraceRay(const Ray& ray)
-{
-    float radius = 0.5f;
     //(bx^2 + by^2) * t^2 + (2(ax * bx + ay * by)) * t + (ax^2 + ay^2 - r^2) = 0
     //a = ray origin
     //b = ray direction
     //r = radius
     //t = hit distance
-    float a = Vector3DotProduct(ray.direction, ray.direction);
-    float b = 2.0f * Vector3DotProduct(ray.position, ray.direction);
-    float c = Vector3DotProduct(ray.position, ray.position) - (radius * radius);
-
-    //Quadratic formula
-    //d = b^2 - 4 * a * c
-    float d = b * b - 4.0f * a * c;
-
-    if (d < 0.0f) 
-        return Vector4{ 0.0f, 0.0f, 0.0f, 1.0f };
-
-    //(-b +- sqrt(d)) / (2.0f * a)
-    float t[] =
+    const Sphere* closestSphere = nullptr;
+    float hitDist = FLT_MAX;
+    for (const Sphere& sphere : scene.Spheres) 
     {
-        (-b - sqrtf(d)) / (2.0f * a),
-        (-b + sqrtf(d)) / (2.0f * a)
-    };
+        Vector3 origin = ray.position - sphere.Position;
 
-    Vector3 hitPos = ray.position + ray.direction * t[0];
+        float a = Vector3DotProduct(ray.direction, ray.direction);
+        float b = 2.0f * Vector3DotProduct(origin, ray.direction);
+        float c = Vector3DotProduct(origin, origin) - (sphere.Radius * sphere.Radius);
+
+        //Quadratic formula
+        //d = b^2 - 4 * a * c
+        float d = b * b - 4.0f * a * c;
+
+        if (d < 0.0f)
+            continue;
+        //(-b +- sqrt(d)) / (2.0f * a)
+        float t[] =
+        {
+            (-b - sqrtf(d)) / (2.0f * a),
+            (-b + sqrtf(d)) / (2.0f * a)
+        };
+        if (t[0] < hitDist) {
+            hitDist = t[0];
+            closestSphere = &sphere;
+        }
+    }
+    if(closestSphere == nullptr)
+        return Vector4{ 0.9f, 0.9f, 0.9f, 1.0f };
+
+    Vector3 origin = ray.position - closestSphere->Position;
+    Vector3 hitPos = origin + ray.direction * hitDist;
     Vector3 normal = Vector3Normalize(hitPos);
 
     Vector3 lightDir = Vector3Normalize({ -1.0f, -1.0f, -1.0f });
     float dot = Vector3DotProduct(normal, Vector3Negate(lightDir));
     float intensity = fmax(dot, 0.0f);
 
-    Vector3 sphereColor = m_SphereColor * intensity;
+    Vector3 sphereColor = closestSphere->Albedo * intensity;
 
-    return Vector4 { sphereColor.x, sphereColor.y, sphereColor.z, 1.0f };
+    return Vector4{ sphereColor.x, sphereColor.y, sphereColor.z, 1.0f };
 }

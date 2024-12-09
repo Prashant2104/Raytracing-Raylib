@@ -23,6 +23,7 @@ public:
     const std::vector<Vector3>& GetRayDirections() const { return m_RayDirections; }
 
     float GetRotationSpeed();
+    bool IsCameraMoving() const;
 private:
     void RecalculateProjection();
     void RecalculateView();
@@ -46,4 +47,6 @@ private:
     Vector2 m_LastMousePosition{ 0.0f, 0.0f };
 
     uint32_t m_ViewportWidth = 0, m_ViewportHeight = 0;
+
+    bool m_IsMoving = false;
 };

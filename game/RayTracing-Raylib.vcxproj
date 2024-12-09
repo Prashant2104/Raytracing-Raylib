@@ -265,13 +265,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="CustomCamera.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="src\CustomCamera.h" />
     <ClInclude Include="src\Random.h" />
     <ClInclude Include="src\Renderer.h" />
+    <ClInclude Include="src\Scene.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CustomCamera.cpp" />
+    <ClCompile Include="src\CustomCamera.cpp" />
     <ClCompile Include="src\Main.cpp" />
     <ClCompile Include="src\Random.cpp" />
     <ClCompile Include="src\Renderer.cpp" />
