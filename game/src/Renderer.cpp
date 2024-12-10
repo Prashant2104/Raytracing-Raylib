@@ -15,7 +15,8 @@ namespace Utils {
     }
 }
 
-Renderer::Renderer()
+Renderer::Renderer(const Scene& scene, const CustomCamera& camera):
+    m_ActiveScene(&scene), m_ActiveCamera(&camera)
 {
     OnResize();
 }
@@ -41,19 +42,15 @@ void Renderer::OnSphereMove()
     m_InitialRenderPass = false;
 }
 
-void Renderer::UpdateTextureBuffer(const Scene& scene, const CustomCamera& camera)
+void Renderer::UpdateTextureBuffer()
 {
-    if (!camera.IsCameraMoving() && m_InitialRenderPass) return;
+    if (!m_ActiveCamera->IsCameraMoving() && m_InitialRenderPass) return;
 
-    Ray ray{};
-    ray.position = camera.GetPosition();
-    for (int y = 0; y < m_ScreenHeight; y++)
+    for (uint32_t y = 0; y < m_ScreenHeight; y++)
     {
-        for (int x = 0; x < m_ScreenWidth; x++)
+        for (uint32_t x = 0; x < m_ScreenWidth; x++)
         {
-            ray.direction = camera.GetRayDirections()[x + y * m_FinalImage.width];
-
-            Vector4 color = TraceRay(scene, ray);
+            Vector4 color = PerPixel(x, y);
             color = Utils::Vector4Clamp(color, Vector4Zero(), Vector4One());
             ImageDrawPixel(&m_FinalImage, x, y, ColorFromNormalized(color));
         }
@@ -63,25 +60,48 @@ void Renderer::UpdateTextureBuffer(const Scene& scene, const CustomCamera& camer
     m_InitialRenderPass = true;
 }
 
-void Renderer::Render(const Scene& scene, const CustomCamera& camera)
+void Renderer::Render()
 {
-    UpdateTextureBuffer(scene, camera);
+    UpdateTextureBuffer();
     DrawTexture(m_Texture2D, 0, 0, WHITE);
 }
 
-Vector4 Renderer::TraceRay(const Scene& scene, const Ray& ray) const
+Vector4 Renderer::PerPixel(uint32_t x, uint32_t y)
 {
-    if(scene.Spheres.size() == 0)  return Vector4{ 0.9f, 0.9f, 0.9f, 1.0f };
+    Ray ray{};
+    ray.position = m_ActiveCamera->GetPosition();
+    ray.direction = m_ActiveCamera->GetRayDirections()[x + y * m_FinalImage.width];
 
+    Renderer::HitPayload payload = TraceRay(ray);
+
+    if (payload.HitDistance < 0.0f) {
+        return Vector4{ 0.0f };
+    }
+
+    const Sphere& closestSphere = m_ActiveScene->Spheres[payload.ObjectIndex];
+
+    Vector3 lightDir = Vector3Normalize({ -1.0f, -1.0f, -1.0f });
+    float dot = Vector3DotProduct(payload.WorldNormal, Vector3Negate(lightDir));
+    float intensity = fmax(dot, 0.0f);
+
+    Vector4 sphereColor = closestSphere.Albedo * intensity;
+
+    return Vector4{ sphereColor.x, sphereColor.y, sphereColor.z, 1.0f };
+}
+
+Renderer::HitPayload Renderer::TraceRay(const Ray& ray) const
+{
     //(bx^2 + by^2) * t^2 + (2(ax * bx + ay * by)) * t + (ax^2 + ay^2 - r^2) = 0
     //a = ray origin
     //b = ray direction
     //r = radius
     //t = hit distance
-    const Sphere* closestSphere = nullptr;
+    int closestSphere = -1;
     float hitDist = FLT_MAX;
-    for (const Sphere& sphere : scene.Spheres) 
+
+    for (int i = 0; i < m_ActiveScene->Spheres.size(); i++)
     {
+        const Sphere& sphere = m_ActiveScene->Spheres[i];
         Vector3 origin = ray.position - sphere.Position;
 
         float a = Vector3DotProduct(ray.direction, ray.direction);
@@ -102,21 +122,35 @@ Vector4 Renderer::TraceRay(const Scene& scene, const Ray& ray) const
         };
         if (t[0] < hitDist) {
             hitDist = t[0];
-            closestSphere = &sphere;
+            closestSphere = i;
         }
     }
-    if(closestSphere == nullptr)
-        return Vector4{ 0.0f };
+    if(closestSphere < 0)
+        return Miss(ray);
 
-    Vector3 origin = ray.position - closestSphere->Position;
-    Vector3 hitPos = origin + ray.direction * hitDist;
-    Vector3 normal = Vector3Normalize(hitPos);
+    return ClosestHit(ray, hitDist, closestSphere);
+}
 
-    Vector3 lightDir = Vector3Normalize({ -1.0f, -1.0f, -1.0f });
-    float dot = Vector3DotProduct(normal, Vector3Negate(lightDir));
-    float intensity = fmax(dot, 0.0f);
+Renderer::HitPayload Renderer::ClosestHit(const Ray& ray, float hitDistance, int objectIndex) const
+{
+    Renderer::HitPayload payload{};
+    payload.HitDistance = hitDistance;
+    payload.ObjectIndex = objectIndex;
 
-    Vector4 sphereColor = closestSphere->Albedo * intensity;
+    const Sphere& closestSphere = m_ActiveScene->Spheres[objectIndex];
 
-    return Vector4{ sphereColor.x, sphereColor.y, sphereColor.z, 1.0f };
+    Vector3 origin = ray.position - closestSphere.Position;
+    payload.WorldPosition = origin + ray.direction * hitDistance;
+    payload.WorldNormal = Vector3Normalize(payload.WorldPosition);
+    payload.WorldPosition += closestSphere.Position;
+
+    return payload;
+}
+
+Renderer::HitPayload Renderer::Miss(const Ray& ray) const
+{
+    Renderer::HitPayload payload{};
+    payload.HitDistance = -1.0f;
+
+    return payload;
 }

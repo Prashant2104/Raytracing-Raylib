@@ -12,28 +12,29 @@ int main(void)
 {
     // Initialization
     //--------------------------------------------------------------------------------------   
-    int screenWidth = 800;
-    int screenHeight = 800;
+    int screenWidth = 500;
+    int screenHeight = 500;
     char fpsText[10];
     bool showMessageBox = false;
 
     InitWindow(screenWidth, screenHeight, "raytracing in raylib");
     SetWindowState(FLAG_WINDOW_RESIZABLE);
 
-    Renderer m_Renderer;
     CustomCamera m_Camera(45.0f, 0.1f, 100.0f);
     Scene m_Scene;
-
     {
         Sphere sphere;
         m_Scene.Spheres.push_back(sphere);
     }
     {
         Sphere sphere;
-        sphere.Position = { 0.25f, 0.1f, -0.25f };
+        sphere.Position = { 0.5f, 0.5f, -1.5f };
         sphere.Albedo = { 0.5f, 0.1f, 0.3f };
+        sphere.Radius = 0.75f;
         m_Scene.Spheres.push_back(sphere);
     }
+
+    Renderer m_Renderer(m_Scene, m_Camera);
 
     int selectedSphere = 0;
     //--------------------------------------------------------------------------------------
@@ -94,7 +95,7 @@ int main(void)
         BeginDrawing();
         ClearBackground(GetColor(0x0f0f0fff));
         GuiGetStyle(DEFAULT, BACKGROUND_COLOR);
-        m_Renderer.Render(m_Scene, m_Camera);
+        m_Renderer.Render();
         m_Camera.OnUpdate(GetFrameTime());
 
         GuiSpinner(Rectangle{ 75, 50, 100, 25 }, "SelectSphere", &selectedSphere, 0, 1, false);
