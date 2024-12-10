@@ -25,7 +25,7 @@ CustomCamera::CustomCamera(float verticalFOV, float nearClip, float farClip)
 
 void CustomCamera::OnUpdate(float ts)
 {
-    Vector2 delta = GetMouseDelta() * 0.0025;
+    Vector2 delta = GetMouseDelta() * 0.003;
 
     if (!IsMouseButtonDown(1))
     {
@@ -40,7 +40,7 @@ void CustomCamera::OnUpdate(float ts)
 
     Vector3 rightDirection = Vector3CrossProduct(m_ForwardDirection, Vector3UnitY);
 
-    float speed = 0.25f;
+    float speed = 1.0f;
 
     // Movement
     if (IsKeyDown(KEY_W))
