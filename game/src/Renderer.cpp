@@ -106,7 +106,7 @@ Vector4 Renderer::TraceRay(const Scene& scene, const Ray& ray) const
         }
     }
     if(closestSphere == nullptr)
-        return Vector4{ 0.9f, 0.9f, 0.9f, 1.0f };
+        return Vector4{ 0.0f };
 
     Vector3 origin = ray.position - closestSphere->Position;
     Vector3 hitPos = origin + ray.direction * hitDist;
@@ -118,5 +118,5 @@ Vector4 Renderer::TraceRay(const Scene& scene, const Ray& ray) const
 
     Vector4 sphereColor = closestSphere->Albedo * intensity;
 
-    return Vector4{ sphereColor.x, sphereColor.y, sphereColor.z, sphereColor.w };
+    return Vector4{ sphereColor.x, sphereColor.y, sphereColor.z, 1.0f };
 }

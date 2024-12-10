@@ -103,15 +103,15 @@ int main(void)
         // Draw
         //----------------------------------------------------------------------------------
         BeginDrawing();
-        ClearBackground(GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)));
-        
+        ClearBackground(GetColor(0x0f0f0fff));
+        GuiGetStyle(DEFAULT, BACKGROUND_COLOR);
         m_Renderer.Render(m_Scene, m_Camera);
         m_Camera.OnUpdate(GetFrameTime());
 
-        GuiSpinner(Rectangle{ 50, 50, 100, 50 }, "SelectSphere", &selectedSphere, 0, 1, true);
-        GuiColorPicker(Rectangle{ 50, 50, 100, 50 }, "Sphere Color", &ColorFromNormalized(m_Scene.Spheres[selectedSphere].Albedo));
+        GuiSpinner(Rectangle{ 75, 50, 100, 25 }, "SelectSphere", &selectedSphere, 0, 1, false);
+        //GuiColorPicker(Rectangle{ 50, 50, 100, 50 }, "Sphere Color", &ColorFromNormalized(m_Scene.Spheres[selectedSphere].Albedo));
 
-        //DrawText(fpsText, 10, 10, 30, WHITE);
+        DrawText(fpsText, 10, 10, 30, WHITE);
         EndDrawing();
         //----------------------------------------------------------------------------------
     }
