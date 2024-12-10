@@ -51,47 +51,36 @@ int main(void)
         //----------------------------------------------------------------------------------
         if (IsKeyDown(KEY_RIGHT)) {
             m_Scene.Spheres[selectedSphere].Position += Vector3UnitX * 0.01f;
-            m_Renderer.OnSphereMove();
         }
         if (IsKeyDown(KEY_LEFT)) {
             m_Scene.Spheres[selectedSphere].Position -= Vector3UnitX * 0.01f;
-            m_Renderer.OnSphereMove();
         }
         if (IsKeyDown(KEY_UP)) {
             m_Scene.Spheres[selectedSphere].Position += Vector3UnitY * 0.01f;
-            m_Renderer.OnSphereMove();
         }
         if (IsKeyDown(KEY_DOWN)) {
             m_Scene.Spheres[selectedSphere].Position -= Vector3UnitY * 0.01f;
-            m_Renderer.OnSphereMove();
         }
         if (IsKeyDown(KEY_ONE)) {
             m_Scene.Spheres[selectedSphere].Albedo = { ColorNormalize(WHITE).x,ColorNormalize(WHITE).y,ColorNormalize(WHITE).z };
-            m_Renderer.OnSphereMove();
         }
         if (IsKeyDown(KEY_TWO)) {
             m_Scene.Spheres[selectedSphere].Albedo = { ColorNormalize(RED).x,ColorNormalize(RED).y,ColorNormalize(RED).z };
-            m_Renderer.OnSphereMove();
         }
         if (IsKeyDown(KEY_THREE)) {
             m_Scene.Spheres[selectedSphere].Albedo = { ColorNormalize(BLUE).x,ColorNormalize(BLUE).y,ColorNormalize(BLUE).z };
-            m_Renderer.OnSphereMove();
         }
         if (IsKeyDown(KEY_FOUR)) {
             m_Scene.Spheres[selectedSphere].Albedo = { ColorNormalize(GREEN).x,ColorNormalize(GREEN).y,ColorNormalize(GREEN).z };
-            m_Renderer.OnSphereMove();
         }
         if (IsKeyDown(KEY_FIVE)) {
             m_Scene.Spheres[selectedSphere].Albedo = { ColorNormalize(VIOLET).x,ColorNormalize(VIOLET).y,ColorNormalize(VIOLET).z };
-            m_Renderer.OnSphereMove();
         }
         if (IsKeyDown(KEY_EQUAL)) {
             m_Scene.Spheres[selectedSphere].Radius += 0.01f;
-            m_Renderer.OnSphereMove();
         }
         if (IsKeyDown(KEY_MINUS)) {
             m_Scene.Spheres[selectedSphere].Radius -= 0.01f;
-            m_Renderer.OnSphereMove();
         }
         //----------------------------------------------------------------------------------
         m_Renderer.OnSphereMove();
