@@ -3,10 +3,10 @@
 namespace Utils {
     static Quaternion QuaternionCross(const Quaternion& q1, const Quaternion& q2) {
         Quaternion result{
-            q1.w * q2.w - q1.x * q2.x - q1.y * q2.y - q1.z * q2.z,  // w
             q1.w * q2.x + q1.x * q2.w + q1.y * q2.z - q1.z * q2.y,  // x
             q1.w * q2.y - q1.x * q2.z + q1.y * q2.w + q1.z * q2.x,  // y
-            q1.w * q2.z + q1.x * q2.y - q1.y * q2.x + q1.z * q2.w   // z
+            q1.w * q2.z + q1.x * q2.y - q1.y * q2.x + q1.z * q2.w,  // z
+            q1.w * q2.w - q1.x * q2.x - q1.y * q2.y - q1.z * q2.z   // w
         };
         return result;
     }
@@ -25,7 +25,7 @@ CustomCamera::CustomCamera(float verticalFOV, float nearClip, float farClip)
 
 void CustomCamera::OnUpdate(float ts)
 {
-    Vector2 delta = GetMouseDelta() * 0.0001;
+    Vector2 delta = GetMouseDelta() * 0.0025;
 
     if (!IsMouseButtonDown(1))
     {
