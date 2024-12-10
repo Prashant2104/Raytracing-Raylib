@@ -71,22 +71,34 @@ Vector4 Renderer::PerPixel(uint32_t x, uint32_t y)
     Ray ray{};
     ray.position = m_ActiveCamera->GetPosition();
     ray.direction = m_ActiveCamera->GetRayDirections()[x + y * m_FinalImage.width];
+    
+    Vector4 color{ 0.0f };
+    float multiplier = 1.0f;
 
-    Renderer::HitPayload payload = TraceRay(ray);
+    int bounces = 2;
+    for (int i = 0; i < bounces; i++) {
+        Renderer::HitPayload payload = TraceRay(ray);
 
-    if (payload.HitDistance < 0.0f) {
-        return Vector4{ 0.0f };
+        if (payload.HitDistance < 0.0f) {
+            Vector4 skyColor{ 0.0f };
+            color += skyColor * multiplier;
+            break;
+        }
+
+        const Sphere& closestSphere = m_ActiveScene->Spheres[payload.ObjectIndex];
+
+        Vector3 lightDir = Vector3Normalize({ -1.0f, -1.0f, -1.0f });
+        float dot = Vector3DotProduct(payload.WorldNormal, Vector3Negate(lightDir));
+        float intensity = fmax(dot, 0.0f);
+
+        Vector4 sphereColor = closestSphere.Albedo * intensity;
+        color += sphereColor * multiplier;
+        multiplier *= 0.7f;
+
+        ray.position = payload.WorldPosition + payload.WorldNormal * 0.0001f;
+        ray.direction = Vector3Reflect(ray.direction, payload.WorldNormal);
     }
-
-    const Sphere& closestSphere = m_ActiveScene->Spheres[payload.ObjectIndex];
-
-    Vector3 lightDir = Vector3Normalize({ -1.0f, -1.0f, -1.0f });
-    float dot = Vector3DotProduct(payload.WorldNormal, Vector3Negate(lightDir));
-    float intensity = fmax(dot, 0.0f);
-
-    Vector4 sphereColor = closestSphere.Albedo * intensity;
-
-    return Vector4{ sphereColor.x, sphereColor.y, sphereColor.z, 1.0f };
+    return Vector4{ color.x, color.y, color.z, 1.0f };
 }
 
 Renderer::HitPayload Renderer::TraceRay(const Ray& ray) const
@@ -120,7 +132,7 @@ Renderer::HitPayload Renderer::TraceRay(const Ray& ray) const
             (-b - sqrtf(d)) / (2.0f * a),
             (-b + sqrtf(d)) / (2.0f * a)
         };
-        if (t[0] < hitDist) {
+        if (t[0] > 0.0f && t[0] < hitDist) {
             hitDist = t[0];
             closestSphere = i;
         }
