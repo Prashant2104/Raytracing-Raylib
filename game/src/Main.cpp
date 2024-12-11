@@ -4,6 +4,7 @@
 #include <iostream>
 #define RAYGUI_IMPLEMENTATION
 #include "raygui.h"
+#include <string>
 
 //------------------------------------------------------------------------------------
 // Program main entry point
@@ -14,22 +15,25 @@ int main(void)
     //--------------------------------------------------------------------------------------   
     int screenWidth = 750;
     int screenHeight = 750;
-    char fpsText[10];
-    bool showMessageBox = false;
+    char fpsText[8];
 
     InitWindow(screenWidth, screenHeight, "raytracing in raylib");
-    SetWindowState(FLAG_WINDOW_RESIZABLE);
+    //SetWindowState(FLAG_WINDOW_RESIZABLE);
 
     CustomCamera m_Camera(45.0f, 0.1f, 100.0f);
     Scene m_Scene;
 
-    Mat& pinkSphere = m_Scene.Materials.emplace_back();
-    pinkSphere.Albedo = ColorFromNormalized({ 1.0f, 0.0f, 1.0f, 1.0f });
-    pinkSphere.Roughness = 0.05f;
+    Mat& s1 = m_Scene.Materials.emplace_back();
+    s1.Albedo = ColorFromNormalized({ 1.0f, 0.0f, 1.0f, 1.0f });
+    s1.Roughness = 0.2f;
 
-    Mat& blueSphere = m_Scene.Materials.emplace_back();
-    blueSphere.Albedo = ColorFromNormalized({ 0.2f, 0.3f, 1.0f, 1.0f });
-    blueSphere.Roughness = 0.1f;
+    Mat& s2 = m_Scene.Materials.emplace_back();
+    s2.Albedo = ColorFromNormalized({ 0.10f, 0.90f, 0.70f, 1.0f });
+    s2.Roughness = 0.1f;
+
+    Mat& sF = m_Scene.Materials.emplace_back();
+    sF.Albedo = ColorFromNormalized({ 0.2f, 0.3f, 1.0f, 1.0f });
+    sF.Roughness = 0.75f;
 
     {
         Sphere sphere;
@@ -38,15 +42,24 @@ int main(void)
     }
     {
         Sphere sphere;
+        sphere.Position = { 1.0f, 0.2, -1.0f };
+        sphere.Radius = 0.7f;
+        sphere.MaterialID = 1;
+        m_Scene.Spheres.push_back(sphere);
+    }
+    {
+        Sphere sphere;
         sphere.Position = { 0.0f, -100.55f, 0.0f };
         sphere.Radius = 100.0f;
-        sphere.MaterialID = 1;
+        sphere.MaterialID = 2;
         m_Scene.Spheres.push_back(sphere);
     }
 
     Renderer m_Renderer(m_Scene, m_Camera);
 
     int selectedMaterial = 0;
+    float x = 0.0f;
+    std::string str = "asd";
     //--------------------------------------------------------------------------------------
     // Main game loop
     while (!WindowShouldClose())    // Detect window close button or ESC key
@@ -57,40 +70,8 @@ int main(void)
             m_Camera.OnResize();
             m_Renderer.OnResize();
         }
-        
-        //Inputs
-        //----------------------------------------------------------------------------------
-        /*if (IsKeyDown(KEY_RIGHT)) {
-            m_Scene.Spheres[selectedSphere].Position += Vector3UnitX * 0.01f;
-        }
-        if (IsKeyDown(KEY_LEFT)) {
-            m_Scene.Spheres[selectedSphere].Position -= Vector3UnitX * 0.01f;
-        }
-        if (IsKeyDown(KEY_UP)) {
-            m_Scene.Spheres[selectedSphere].Position += Vector3UnitY * 0.01f;
-        }
-        if (IsKeyDown(KEY_DOWN)) {
-            m_Scene.Spheres[selectedSphere].Position -= Vector3UnitY * 0.01f;
-        }
-        if (IsKeyDown(KEY_COMMA)) {
-            m_Scene.Spheres[selectedSphere].Position += Vector3UnitZ * 0.01f;
-        }
-        if (IsKeyDown(KEY_APOSTROPHE)) {
-            m_Scene.Spheres[selectedSphere].Position -= Vector3UnitZ * 0.01f;
-        }
-        if (IsKeyDown(KEY_EQUAL)) {
-            m_Scene.Spheres[selectedSphere].Radius += 0.01f;
-        }
-        if (IsKeyDown(KEY_MINUS)) {
-            m_Scene.Spheres[selectedSphere].Radius -= 0.01f;
-        }*/
-        if (IsKeyPressed(KEY_SPACE)) {
-            m_Renderer.OnSphereMove();
-        }
-        //----------------------------------------------------------------------------------
-
-        int fps = GetFPS();
-        sprintf(fpsText, "%d FPS", fps);
+        //m_Renderer.OnSphereMove();
+        sprintf(fpsText, "%d FPS", GetFPS());
         //----------------------------------------------------------------------------------
 
         // Draw
@@ -98,12 +79,13 @@ int main(void)
         BeginDrawing();
         ClearBackground(GetColor(0x0f0f0fff));
         GuiGetStyle(DEFAULT, BACKGROUND_COLOR);
+
         m_Renderer.Render();
         m_Camera.OnUpdate(GetFrameTime());
 
-        GuiSpinner(Rectangle{ 75, 50, 100, 25 }, "Material ID", &selectedMaterial, 0, m_Scene.Materials.size() - 1, false);
-        GuiSlider(Rectangle{ 75, 100, 100, 25 }, "MinRough", "MaxRough", &m_Scene.Materials[selectedMaterial].Roughness, 0.0f, 1.0f);
-        GuiColorPicker(Rectangle{ 75, 150, 100, 50 }, "SphereColor", &m_Scene.Materials[selectedMaterial].Albedo);
+        GuiSpinner(Rectangle{ 20, 50, 100, 25 }, "ID", &selectedMaterial, 0, m_Scene.Materials.size() - 1, false);
+        GuiColorBarAlpha(Rectangle{ 15, 100, 100, 25 }, "Roughness", &m_Scene.Materials[selectedMaterial].Roughness);
+        GuiColorPicker(Rectangle{ 15, 150, 100, 50 }, "SphereColor", &m_Scene.Materials[selectedMaterial].Albedo);
 
         DrawText(fpsText, 10, 10, 30, WHITE);
         EndDrawing();

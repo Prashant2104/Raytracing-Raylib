@@ -8,7 +8,7 @@ public:
     Renderer(const Scene& scene, const CustomCamera& camera);
 
     void OnResize();
-    void OnSphereMove();
+    //void OnSphereMove();
     void Render();
 private:
     struct HitPayload {
@@ -36,5 +36,5 @@ private:
     int m_ScreenWidth;
     int m_ScreenHeight;
 
-    bool m_InitialRenderPass = false;
+    //bool m_InitialRenderPass = false;
 };

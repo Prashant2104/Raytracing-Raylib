@@ -1,6 +1,6 @@
 #include "Renderer.h"
 #include "raymath.h"
-#include <random>
+#include "Random.h"
 
 namespace Utils {
 
@@ -14,16 +14,9 @@ namespace Utils {
 
         return result;
     }
-    static float randomFloat(float min, float max) {
-        // Create a random engine based on the current time
-        std::random_device rd;
-        std::mt19937 gen(rd());
-
-        // Define the distribution range
-        std::uniform_real_distribution<float> dis(min, max);
-
-        // Generate a random float in the range [min, max]
-        return dis(gen);
+    static Vector3 randomVec3(float min, float max) {
+        
+        return Vector3{ RayTracing::Random::Float() * (max - min) + min, RayTracing::Random::Float() * (max - min) + min, RayTracing::Random::Float() * (max - min) + min };
     }
 }
 
@@ -49,15 +42,8 @@ void Renderer::OnResize()
     m_Texture2D = LoadTextureFromImage(m_FinalImage);
 }
 
-void Renderer::OnSphereMove()
-{
-    m_InitialRenderPass = false;
-}
-
 void Renderer::UpdateTextureBuffer()
 {
-    if (!m_ActiveCamera->IsCameraMoving() && m_InitialRenderPass) return;
-
     for (uint32_t y = 0; y < m_ScreenHeight; y++)
     {
         for (uint32_t x = 0; x < m_ScreenWidth; x++)
@@ -69,7 +55,6 @@ void Renderer::UpdateTextureBuffer()
     }
     ImageFlipVertical(&m_FinalImage);
     UpdateTexture(m_Texture2D, m_FinalImage.data);
-    m_InitialRenderPass = true;
 }
 
 void Renderer::Render()
@@ -87,7 +72,7 @@ Vector4 Renderer::PerPixel(uint32_t x, uint32_t y)
     Vector4 color{ 0.0f };
     float multiplier = 1.0f;
 
-    int bounces = 2;
+    int bounces = 5;
     for (int i = 0; i < bounces; i++) {
         Renderer::HitPayload payload = TraceRay(ray);
 
@@ -109,7 +94,7 @@ Vector4 Renderer::PerPixel(uint32_t x, uint32_t y)
         multiplier *= 0.5f;
 
         ray.position = payload.WorldPosition + payload.WorldNormal * 0.0001f;
-        Vector3 randomVector = { Utils::randomFloat(-0.5f, 0.5f),Utils::randomFloat(-0.5f, 0.5f),Utils::randomFloat(-0.5f, 0.5f) };
+        Vector3 randomVector = Utils::randomVec3(-0.5f, 0.5f);
         randomVector *= mat.Roughness;
         ray.direction = Vector3Reflect(ray.direction, payload.WorldNormal + randomVector);
     }
