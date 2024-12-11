@@ -16,7 +16,7 @@ CustomCamera::CustomCamera(float verticalFOV, float nearClip, float farClip)
     : m_VerticalFOV(verticalFOV), m_NearClip(nearClip), m_FarClip(farClip)
 {
     m_ForwardDirection = { 0.0f, 0.0f, -1.0f };
-    m_Position = { 0.0f, 0.0f, 3.0f };
+    m_Position = { 0.0f, 0.0f, 5.0f };
     
     RecalculateView();
     RecalculateRayDirections();

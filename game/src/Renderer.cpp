@@ -1,5 +1,6 @@
 #include "Renderer.h"
 #include "raymath.h"
+#include <random>
 
 namespace Utils {
 
@@ -12,6 +13,17 @@ namespace Utils {
         result.w = fminf(max.w, fmaxf(min.w, vector.w));
 
         return result;
+    }
+    static float randomFloat(float min, float max) {
+        // Create a random engine based on the current time
+        std::random_device rd;
+        std::mt19937 gen(rd());
+
+        // Define the distribution range
+        std::uniform_real_distribution<float> dis(min, max);
+
+        // Generate a random float in the range [min, max]
+        return dis(gen);
     }
 }
 
@@ -80,23 +92,26 @@ Vector4 Renderer::PerPixel(uint32_t x, uint32_t y)
         Renderer::HitPayload payload = TraceRay(ray);
 
         if (payload.HitDistance < 0.0f) {
-            Vector4 skyColor{ 0.0f };
+            Vector4 skyColor{ 0.5f, 0.7f, 0.9f, 1.0f };
             color += skyColor * multiplier;
             break;
         }
 
         const Sphere& closestSphere = m_ActiveScene->Spheres[payload.ObjectIndex];
+        const Mat& mat = m_ActiveScene->Materials[closestSphere.MaterialID];
 
         Vector3 lightDir = Vector3Normalize({ -1.0f, -1.0f, -1.0f });
         float dot = Vector3DotProduct(payload.WorldNormal, Vector3Negate(lightDir));
         float intensity = fmax(dot, 0.0f);
 
-        Vector4 sphereColor = closestSphere.Albedo * intensity;
+        Vector4 sphereColor = ColorNormalize(mat.Albedo) * intensity;
         color += sphereColor * multiplier;
-        multiplier *= 0.7f;
+        multiplier *= 0.5f;
 
         ray.position = payload.WorldPosition + payload.WorldNormal * 0.0001f;
-        ray.direction = Vector3Reflect(ray.direction, payload.WorldNormal);
+        Vector3 randomVector = { Utils::randomFloat(-0.5f, 0.5f),Utils::randomFloat(-0.5f, 0.5f),Utils::randomFloat(-0.5f, 0.5f) };
+        randomVector *= mat.Roughness;
+        ray.direction = Vector3Reflect(ray.direction, payload.WorldNormal + randomVector);
     }
     return Vector4{ color.x, color.y, color.z, 1.0f };
 }

@@ -12,8 +12,8 @@ int main(void)
 {
     // Initialization
     //--------------------------------------------------------------------------------------   
-    int screenWidth = 500;
-    int screenHeight = 500;
+    int screenWidth = 750;
+    int screenHeight = 750;
     char fpsText[10];
     bool showMessageBox = false;
 
@@ -22,21 +22,31 @@ int main(void)
 
     CustomCamera m_Camera(45.0f, 0.1f, 100.0f);
     Scene m_Scene;
+
+    Mat& pinkSphere = m_Scene.Materials.emplace_back();
+    pinkSphere.Albedo = ColorFromNormalized({ 1.0f, 0.0f, 1.0f, 1.0f });
+    pinkSphere.Roughness = 0.05f;
+
+    Mat& blueSphere = m_Scene.Materials.emplace_back();
+    blueSphere.Albedo = ColorFromNormalized({ 0.2f, 0.3f, 1.0f, 1.0f });
+    blueSphere.Roughness = 0.1f;
+
     {
         Sphere sphere;
+        sphere.MaterialID = 0;
         m_Scene.Spheres.push_back(sphere);
     }
     {
         Sphere sphere;
-        sphere.Position = { 0.5f, 0.5f, -1.5f };
-        sphere.Albedo = { 0.5f, 0.1f, 0.3f };
-        sphere.Radius = 0.75f;
+        sphere.Position = { 0.0f, -100.55f, 0.0f };
+        sphere.Radius = 100.0f;
+        sphere.MaterialID = 1;
         m_Scene.Spheres.push_back(sphere);
     }
 
     Renderer m_Renderer(m_Scene, m_Camera);
 
-    int selectedSphere = 0;
+    int selectedMaterial = 0;
     //--------------------------------------------------------------------------------------
     // Main game loop
     while (!WindowShouldClose())    // Detect window close button or ESC key
@@ -50,7 +60,7 @@ int main(void)
         
         //Inputs
         //----------------------------------------------------------------------------------
-        if (IsKeyDown(KEY_RIGHT)) {
+        /*if (IsKeyDown(KEY_RIGHT)) {
             m_Scene.Spheres[selectedSphere].Position += Vector3UnitX * 0.01f;
         }
         if (IsKeyDown(KEY_LEFT)) {
@@ -62,29 +72,22 @@ int main(void)
         if (IsKeyDown(KEY_DOWN)) {
             m_Scene.Spheres[selectedSphere].Position -= Vector3UnitY * 0.01f;
         }
-        if (IsKeyDown(KEY_ONE)) {
-            m_Scene.Spheres[selectedSphere].Albedo = { ColorNormalize(WHITE).x,ColorNormalize(WHITE).y,ColorNormalize(WHITE).z };
+        if (IsKeyDown(KEY_COMMA)) {
+            m_Scene.Spheres[selectedSphere].Position += Vector3UnitZ * 0.01f;
         }
-        if (IsKeyDown(KEY_TWO)) {
-            m_Scene.Spheres[selectedSphere].Albedo = { ColorNormalize(RED).x,ColorNormalize(RED).y,ColorNormalize(RED).z };
-        }
-        if (IsKeyDown(KEY_THREE)) {
-            m_Scene.Spheres[selectedSphere].Albedo = { ColorNormalize(BLUE).x,ColorNormalize(BLUE).y,ColorNormalize(BLUE).z };
-        }
-        if (IsKeyDown(KEY_FOUR)) {
-            m_Scene.Spheres[selectedSphere].Albedo = { ColorNormalize(GREEN).x,ColorNormalize(GREEN).y,ColorNormalize(GREEN).z };
-        }
-        if (IsKeyDown(KEY_FIVE)) {
-            m_Scene.Spheres[selectedSphere].Albedo = { ColorNormalize(VIOLET).x,ColorNormalize(VIOLET).y,ColorNormalize(VIOLET).z };
+        if (IsKeyDown(KEY_APOSTROPHE)) {
+            m_Scene.Spheres[selectedSphere].Position -= Vector3UnitZ * 0.01f;
         }
         if (IsKeyDown(KEY_EQUAL)) {
             m_Scene.Spheres[selectedSphere].Radius += 0.01f;
         }
         if (IsKeyDown(KEY_MINUS)) {
             m_Scene.Spheres[selectedSphere].Radius -= 0.01f;
+        }*/
+        if (IsKeyPressed(KEY_SPACE)) {
+            m_Renderer.OnSphereMove();
         }
         //----------------------------------------------------------------------------------
-        m_Renderer.OnSphereMove();
 
         int fps = GetFPS();
         sprintf(fpsText, "%d FPS", fps);
@@ -98,8 +101,9 @@ int main(void)
         m_Renderer.Render();
         m_Camera.OnUpdate(GetFrameTime());
 
-        GuiSpinner(Rectangle{ 75, 50, 100, 25 }, "SelectSphere", &selectedSphere, 0, 1, false);
-        //GuiColorPicker(Rectangle{ 50, 50, 100, 50 }, "Sphere Color", &ColorFromNormalized(m_Scene.Spheres[selectedSphere].Albedo));
+        GuiSpinner(Rectangle{ 75, 50, 100, 25 }, "Material ID", &selectedMaterial, 0, m_Scene.Materials.size() - 1, false);
+        GuiSlider(Rectangle{ 75, 100, 100, 25 }, "MinRough", "MaxRough", &m_Scene.Materials[selectedMaterial].Roughness, 0.0f, 1.0f);
+        GuiColorPicker(Rectangle{ 75, 150, 100, 50 }, "SphereColor", &m_Scene.Materials[selectedMaterial].Albedo);
 
         DrawText(fpsText, 10, 10, 30, WHITE);
         EndDrawing();
