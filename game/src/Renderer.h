@@ -29,12 +29,9 @@ private:
 private:
     Image m_FinalImage;
     Texture2D m_Texture2D;
-    Vector3 m_SphereColor;
 
     const Scene* m_ActiveScene = nullptr;
     const CustomCamera* m_ActiveCamera = nullptr;
     int m_ScreenWidth;
     int m_ScreenHeight;
-
-    //bool m_InitialRenderPass = false;
 };

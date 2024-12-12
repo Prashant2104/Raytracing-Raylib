@@ -1,10 +1,7 @@
-#include "raylib.h"
 #include "Renderer.h"
 #include "CustomCamera.h"
-#include <iostream>
 #define RAYGUI_IMPLEMENTATION
 #include "raygui.h"
-#include <string>
 
 //------------------------------------------------------------------------------------
 // Program main entry point
@@ -15,10 +12,9 @@ int main(void)
     //--------------------------------------------------------------------------------------   
     int screenWidth = 750;
     int screenHeight = 750;
-    char fpsText[8];
 
     InitWindow(screenWidth, screenHeight, "raytracing in raylib");
-    //SetWindowState(FLAG_WINDOW_RESIZABLE);
+    SetWindowState(FLAG_WINDOW_RESIZABLE);
 
     CustomCamera m_Camera(45.0f, 0.1f, 100.0f);
     Scene m_Scene;
@@ -58,8 +54,7 @@ int main(void)
     Renderer m_Renderer(m_Scene, m_Camera);
 
     int selectedMaterial = 0;
-    float x = 0.0f;
-    std::string str = "asd";
+    //float x = 0;
     //--------------------------------------------------------------------------------------
     // Main game loop
     while (!WindowShouldClose())    // Detect window close button or ESC key
@@ -70,8 +65,6 @@ int main(void)
             m_Camera.OnResize();
             m_Renderer.OnResize();
         }
-        //m_Renderer.OnSphereMove();
-        sprintf(fpsText, "%d FPS", GetFPS());
         //----------------------------------------------------------------------------------
 
         // Draw
@@ -83,11 +76,11 @@ int main(void)
         m_Renderer.Render();
         m_Camera.OnUpdate(GetFrameTime());
 
-        GuiSpinner(Rectangle{ 20, 50, 100, 25 }, "ID", &selectedMaterial, 0, m_Scene.Materials.size() - 1, false);
-        GuiColorBarAlpha(Rectangle{ 15, 100, 100, 25 }, "Roughness", &m_Scene.Materials[selectedMaterial].Roughness);
-        GuiColorPicker(Rectangle{ 15, 150, 100, 50 }, "SphereColor", &m_Scene.Materials[selectedMaterial].Albedo);
+        GuiSpinner(Rectangle{ 50, 50, 100, 25 }, "S ID ", &selectedMaterial, 0, m_Scene.Materials.size() - 1, false);
+        GuiColorPicker(Rectangle{ 50, 150, 100, 50 }, "SphereColor", &m_Scene.Materials[selectedMaterial].Albedo);
+        GuiSlider(Rectangle{ 50, 100, 100, 25 }, "R Min", "R Max", &m_Scene.Materials[selectedMaterial].Roughness, 0.0f, 1.0f);
 
-        DrawText(fpsText, 10, 10, 30, WHITE);
+        DrawFPS(25, 10);
         EndDrawing();
         //----------------------------------------------------------------------------------
     }

@@ -3,7 +3,6 @@
 #include "Random.h"
 
 namespace Utils {
-
     static Vector4 Vector4Clamp(const Vector4& vector, Vector4 min, Vector4 max) {
         Vector4 result = { 0.0f };
 
@@ -14,8 +13,7 @@ namespace Utils {
 
         return result;
     }
-    static Vector3 randomVec3(float min, float max) {
-        
+    static Vector3 randomVec3(float min, float max) {        
         return Vector3{ RayTracing::Random::Float() * (max - min) + min, RayTracing::Random::Float() * (max - min) + min, RayTracing::Random::Float() * (max - min) + min };
     }
 }
@@ -23,22 +21,19 @@ namespace Utils {
 Renderer::Renderer(const Scene& scene, const CustomCamera& camera):
     m_ActiveScene(&scene), m_ActiveCamera(&camera)
 {
-    OnResize();
+    m_ScreenWidth = GetScreenWidth();
+    m_ScreenHeight = GetScreenHeight();
+    m_FinalImage = GenImageColor(m_ScreenWidth, m_ScreenHeight, RAYWHITE);
+    m_Texture2D = LoadTextureFromImage(m_FinalImage);
 }
 
 void Renderer::OnResize()
 {
+    UnloadTexture(m_Texture2D);
+    UnloadImage(m_FinalImage);
     m_ScreenWidth = GetScreenWidth();
     m_ScreenHeight = GetScreenHeight();
-    if (IsImageValid(m_FinalImage))
-    {
-        ImageResize(&m_FinalImage, m_ScreenWidth, m_ScreenHeight);
-    }
-    else
-    {
-        m_FinalImage = GenImageColor(m_ScreenWidth, m_ScreenHeight, RAYWHITE);
-    }
-    UnloadTexture(m_Texture2D);
+    m_FinalImage = GenImageColor(m_ScreenWidth, m_ScreenHeight, RAYWHITE);    
     m_Texture2D = LoadTextureFromImage(m_FinalImage);
 }
 
