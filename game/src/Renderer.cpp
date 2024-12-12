@@ -37,6 +37,21 @@ void Renderer::OnResize()
     m_Texture2D = LoadTextureFromImage(m_FinalImage);
 }
 
+void Renderer::ExportRender(const char* name) const
+{
+    char* directory = "./Renders/";
+    if (!DirectoryExists(directory)) {
+        MakeDirectory(directory);
+    }
+    char t[256];
+    strcpy(t, directory);
+    strcat(t, name);
+    Image renderImage = ImageCopy(m_FinalImage);
+    ImageResize(&renderImage, renderImage.width * 2.0f, renderImage.height * 2.0f);
+    ExportImage(renderImage, t);
+    UnloadImage(renderImage);
+}
+
 void Renderer::UpdateTextureBuffer()
 {
     for (uint32_t y = 0; y < m_ScreenHeight; y++)

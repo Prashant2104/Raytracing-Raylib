@@ -54,7 +54,7 @@ int main(void)
     Renderer m_Renderer(m_Scene, m_Camera);
 
     int selectedMaterial = 0;
-    //float x = 0;
+    char name[128] = "Test.png";
     //--------------------------------------------------------------------------------------
     // Main game loop
     while (!WindowShouldClose())    // Detect window close button or ESC key
@@ -77,9 +77,12 @@ int main(void)
         m_Camera.OnUpdate(GetFrameTime());
 
         GuiSpinner(Rectangle{ 50, 50, 100, 25 }, "S ID ", &selectedMaterial, 0, m_Scene.Materials.size() - 1, false);
-        GuiColorPicker(Rectangle{ 50, 150, 100, 50 }, "SphereColor", &m_Scene.Materials[selectedMaterial].Albedo);
         GuiSlider(Rectangle{ 50, 100, 100, 25 }, "R Min", "R Max", &m_Scene.Materials[selectedMaterial].Roughness, 0.0f, 1.0f);
-
+        GuiColorPicker(Rectangle{ 50, 150, 100, 50 }, "SphereColor", &m_Scene.Materials[selectedMaterial].Albedo);
+        if (GuiButton(Rectangle{ 50, 225, 100, 30 }, "Render")) {
+            m_Renderer.ExportRender(name);
+        }
+        GuiTextInputBox(Rectangle{ 50, 275, 125, 150 }, "Image name", "What should the\nimage be called?", "Save Name", name, 25, false);
         DrawFPS(25, 10);
         EndDrawing();
         //----------------------------------------------------------------------------------

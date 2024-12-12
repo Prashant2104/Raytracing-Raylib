@@ -8,7 +8,7 @@ public:
     Renderer(const Scene& scene, const CustomCamera& camera);
 
     void OnResize();
-    //void OnSphereMove();
+    void ExportRender(const char* name) const;
     void Render();
 private:
     struct HitPayload {
