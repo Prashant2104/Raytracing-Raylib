@@ -5,11 +5,18 @@
 
 class Renderer {
 public:
+    struct Settings
+    {
+        bool accumulate = true;
+    };
+public:
     Renderer(const Scene& scene, const CustomCamera& camera);
 
     void OnResize();
     void ExportRender(const char* name) const;
     void Render();
+    void ResetFrameIndex() { m_FrameIndex = 1; }
+    Settings& GetSettings() { return m_Settings; }
 private:
     struct HitPayload {
         float HitDistance;
@@ -29,9 +36,13 @@ private:
 private:
     Image m_FinalImage;
     Texture2D m_Texture2D;
+    Vector4* m_AccumulationData = nullptr;
+    uint32_t m_FrameIndex = 1;
+    Settings m_Settings;
 
     const Scene* m_ActiveScene = nullptr;
     const CustomCamera* m_ActiveCamera = nullptr;
+
     int m_ScreenWidth;
     int m_ScreenHeight;
 };

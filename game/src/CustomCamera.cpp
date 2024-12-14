@@ -23,7 +23,7 @@ CustomCamera::CustomCamera(float verticalFOV, float nearClip, float farClip)
     OnResize();
 }
 
-void CustomCamera::OnUpdate(float ts)
+bool CustomCamera::OnUpdate(float ts)
 {
     Vector2 delta = GetMouseDelta() * 0.003;
 
@@ -31,7 +31,7 @@ void CustomCamera::OnUpdate(float ts)
     {
         if(IsCursorHidden())
             EnableCursor();
-        return;
+        return false;
     }
     if (!IsCursorHidden())
         DisableCursor();
@@ -93,6 +93,8 @@ void CustomCamera::OnUpdate(float ts)
         RecalculateView();
         RecalculateRayDirections();
     }
+
+    return m_IsMoving;
 }
 
 void CustomCamera::OnResize()

@@ -9,7 +9,7 @@ class CustomCamera
 public:
     CustomCamera(float verticalFOV, float nearClip, float farClip);
 
-    void OnUpdate(float ts);
+    bool OnUpdate(float ts);
     void OnResize();
 
     const Matrix& GetProjection() const { return m_Projection; }

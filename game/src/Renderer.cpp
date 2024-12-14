@@ -23,18 +23,25 @@ Renderer::Renderer(const Scene& scene, const CustomCamera& camera):
 {
     m_ScreenWidth = GetScreenWidth();
     m_ScreenHeight = GetScreenHeight();
+    delete[] m_AccumulationData;
+    m_AccumulationData = new Vector4[m_ScreenWidth * m_ScreenHeight];
     m_FinalImage = GenImageColor(m_ScreenWidth, m_ScreenHeight, RAYWHITE);
     m_Texture2D = LoadTextureFromImage(m_FinalImage);
 }
 
 void Renderer::OnResize()
 {
+    delete[] m_AccumulationData;
     UnloadTexture(m_Texture2D);
     UnloadImage(m_FinalImage);
     m_ScreenWidth = GetScreenWidth();
     m_ScreenHeight = GetScreenHeight();
+
+    m_AccumulationData = new Vector4[m_ScreenWidth * m_ScreenHeight];
     m_FinalImage = GenImageColor(m_ScreenWidth, m_ScreenHeight, RAYWHITE);    
     m_Texture2D = LoadTextureFromImage(m_FinalImage);
+
+    ResetFrameIndex();
 }
 
 void Renderer::ExportRender(const char* name) const
@@ -47,24 +54,38 @@ void Renderer::ExportRender(const char* name) const
     strcpy(t, directory);
     strcat(t, name);
     Image renderImage = ImageCopy(m_FinalImage);
-    ImageResize(&renderImage, renderImage.width * 2.0f, renderImage.height * 2.0f);
+    //ImageResizeNN(&renderImage, renderImage.width * 2.0f, renderImage.height * 2.0f);
     ExportImage(renderImage, t);
     UnloadImage(renderImage);
 }
 
 void Renderer::UpdateTextureBuffer()
 {
+    if (m_FrameIndex == 1)
+        memset(m_AccumulationData, 0, m_ScreenWidth * m_ScreenHeight * sizeof(Vector4));
+
     for (uint32_t y = 0; y < m_ScreenHeight; y++)
     {
         for (uint32_t x = 0; x < m_ScreenWidth; x++)
         {
             Vector4 color = PerPixel(x, y);
-            color = Utils::Vector4Clamp(color, Vector4Zero(), Vector4One());
-            ImageDrawPixel(&m_FinalImage, x, y, ColorFromNormalized(color));
+            m_AccumulationData[x + y * m_ScreenWidth] += color;
+            
+            Vector4 accumulatedColor = m_AccumulationData[x + y * m_ScreenWidth];
+            Vector4 frameVec4 = { (float)m_FrameIndex,(float)m_FrameIndex ,(float)m_FrameIndex ,(float)m_FrameIndex };
+            accumulatedColor = Vector4Divide(accumulatedColor, frameVec4);
+
+            accumulatedColor = Utils::Vector4Clamp(accumulatedColor, Vector4Zero(), Vector4One());
+            ImageDrawPixel(&m_FinalImage, x, y, ColorFromNormalized(accumulatedColor));
         }
     }
     ImageFlipVertical(&m_FinalImage);
     UpdateTexture(m_Texture2D, m_FinalImage.data);
+
+    if (m_Settings.accumulate)
+        m_FrameIndex++;
+    else
+        m_FrameIndex = 1;
 }
 
 void Renderer::Render()
