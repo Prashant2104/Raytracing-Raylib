@@ -8,49 +8,17 @@
 //------------------------------------------------------------------------------------
 int main(void)
 {
+    Scene SetupScene(void);
     // Initialization
     //--------------------------------------------------------------------------------------   
-    int screenWidth = 750;
-    int screenHeight = 750;
+    int screenWidth = 1200;
+    int screenHeight = 900;
 
     InitWindow(screenWidth, screenHeight, "raytracing in raylib");
     SetWindowState(FLAG_WINDOW_RESIZABLE);
 
     CustomCamera m_Camera(45.0f, 0.1f, 100.0f);
-    Scene m_Scene;
-
-    Mat& sF = m_Scene.Materials.emplace_back();
-    sF.Albedo = ColorFromNormalized({ 0.2f, 0.3f, 1.0f, 1.0f });
-    sF.Roughness = 0.75f;
-
-    Mat& s1 = m_Scene.Materials.emplace_back();
-    s1.Albedo = ColorFromNormalized({ 1.0f, 0.0f, 1.0f, 1.0f });
-    s1.Roughness = 0.2f;
-
-    Mat& s2 = m_Scene.Materials.emplace_back();
-    s2.Albedo = ColorFromNormalized({ 0.10f, 0.90f, 0.70f, 1.0f });
-    s2.Roughness = 0.1f;
-
-    {
-        Sphere sphere;
-        sphere.Position = { 0.0f, -100.55f, 0.0f };
-        sphere.Radius = 100.0f;
-        sphere.MaterialID = 0;
-        m_Scene.Spheres.push_back(sphere);
-    }
-    {
-        Sphere sphere;
-        sphere.MaterialID = 1;
-        m_Scene.Spheres.push_back(sphere);
-    }
-    {
-        Sphere sphere;
-        sphere.Position = { 1.0f, 0.2, -1.0f };
-        sphere.Radius = 0.7f;
-        sphere.MaterialID = 2;
-        m_Scene.Spheres.push_back(sphere);
-    }
-
+    Scene m_Scene = SetupScene();
     Renderer m_Renderer(m_Scene, m_Camera);
 
     int selectedMaterial = 0;
@@ -110,4 +78,93 @@ int main(void)
     //--------------------------------------------------------------------------------------
 
     return 0;
+}
+
+Scene SetupScene(void) {
+    Scene m_Scene;
+    {
+        Mat& s = m_Scene.Materials.emplace_back();
+        s.Albedo = ColorFromNormalized({ 0.2f, 0.3f, 1.0f, 1.0f });
+        s.Roughness = 0.05f;
+    }
+    {
+        Mat& s = m_Scene.Materials.emplace_back();
+        s.Albedo = ColorFromNormalized({ 1.0f, 0.0f, 1.0f, 1.0f });
+        s.Roughness = 0.82f;
+    }
+    {
+        Mat& s = m_Scene.Materials.emplace_back();
+        s.Albedo = ColorFromNormalized({ 0.10f, 0.90f, 0.70f, 1.0f });
+        s.Roughness = 0.61f;
+    }
+    {
+        Mat& s = m_Scene.Materials.emplace_back();
+        s.Albedo = ColorFromNormalized({ 0.50f, 0.10f, 0.80f, 1.0f });
+        s.Roughness = 0.7f;
+    }
+    {
+        Mat& s = m_Scene.Materials.emplace_back();
+        s.Albedo = ColorFromNormalized({ 0.75f, 0.91f, 0.58f, 1.0f });
+        s.Roughness = 0.55f;
+    }
+    {
+        Mat& s = m_Scene.Materials.emplace_back();
+        s.Albedo = ColorFromNormalized({ 0.58f, 0.51f, 0.81f, 1.0f });
+        s.Roughness = 0.75f;
+    }
+    {
+        Mat& s = m_Scene.Materials.emplace_back();
+        s.Albedo = ColorFromNormalized({ 0.58f, 0.751f, 0.81f, 1.0f });
+        s.Roughness = 0.95f;
+    }
+
+    {
+        Sphere sphere;
+        sphere.Position = { 0.0f, -100.55f, 0.0f };
+        sphere.Radius = 100.0f;
+        sphere.MaterialID = 0;
+        m_Scene.Spheres.push_back(sphere);
+    }
+
+    {
+        Sphere sphere;
+        sphere.MaterialID = 1;
+        m_Scene.Spheres.push_back(sphere);
+    }
+    {
+        Sphere sphere;
+        sphere.Position = { 1.0f, 0.15f, -1.0f };
+        sphere.Radius = 0.7f;
+        sphere.MaterialID = 2;
+        m_Scene.Spheres.push_back(sphere);
+    }
+    {
+        Sphere sphere;
+        sphere.Position = { -1.0f, 0.05f, 0.50f };
+        sphere.Radius = 0.58f;
+        sphere.MaterialID = 3;
+        m_Scene.Spheres.push_back(sphere);
+    }
+    {
+        Sphere sphere;
+        sphere.Position = { 1.0f, 1.5f, -1.0f };
+        sphere.Radius = 0.8f;
+        sphere.MaterialID = 4;
+        m_Scene.Spheres.push_back(sphere);
+    }
+    {
+        Sphere sphere;
+        sphere.Position = { -1.75f, 0.5f, -1.0f };
+        sphere.Radius = 0.8f;
+        sphere.MaterialID = 5;
+        m_Scene.Spheres.push_back(sphere);
+    }
+    {
+        Sphere sphere;
+        sphere.Position = { 2.0f, 0.05f, -1.5f };
+        sphere.Radius = 0.3f;
+        sphere.MaterialID = 6;
+        m_Scene.Spheres.push_back(sphere);
+    }
+    return m_Scene;
 }
