@@ -40,6 +40,8 @@ private:
     uint32_t m_FrameIndex = 1;
     Settings m_Settings;
 
+    std::vector<uint32_t> m_ImageHorIter, m_ImageVerIter;
+
     const Scene* m_ActiveScene = nullptr;
     const CustomCamera* m_ActiveCamera = nullptr;
 

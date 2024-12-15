@@ -1,6 +1,9 @@
 #include "Renderer.h"
 #include "raymath.h"
 #include "Random.h"
+#include <execution>
+
+#define MT 1;
 
 namespace Utils {
     static Vector4 Vector4Clamp(const Vector4& vector, Vector4 min, Vector4 max) {
@@ -13,9 +16,13 @@ namespace Utils {
 
         return result;
     }
-    static Vector3 randomVec3(float min, float max) {        
-        return Vector3{ RayTracing::Random::Float() * (max - min) + min, RayTracing::Random::Float() * (max - min) + min, RayTracing::Random::Float() * (max - min) + min };
-    }
+    /*static Vector3 randomVec3(float min, float max) {
+        return Vector3{ 
+            RayTracing::Random::Float() * (max - min) + min, 
+            RayTracing::Random::Float() * (max - min) + min, 
+            RayTracing::Random::Float() * (max - min) + min 
+        };
+    }*/
 }
 
 Renderer::Renderer(const Scene& scene, const CustomCamera& camera):
@@ -23,23 +30,33 @@ Renderer::Renderer(const Scene& scene, const CustomCamera& camera):
 {
     m_ScreenWidth = GetScreenWidth();
     m_ScreenHeight = GetScreenHeight();
-    delete[] m_AccumulationData;
-    m_AccumulationData = new Vector4[m_ScreenWidth * m_ScreenHeight];
+
     m_FinalImage = GenImageColor(m_ScreenWidth, m_ScreenHeight, RAYWHITE);
     m_Texture2D = LoadTextureFromImage(m_FinalImage);
+
+    OnResize();
 }
 
 void Renderer::OnResize()
 {
-    delete[] m_AccumulationData;
-    UnloadTexture(m_Texture2D);
-    UnloadImage(m_FinalImage);
     m_ScreenWidth = GetScreenWidth();
     m_ScreenHeight = GetScreenHeight();
 
+    delete[] m_AccumulationData;
     m_AccumulationData = new Vector4[m_ScreenWidth * m_ScreenHeight];
-    m_FinalImage = GenImageColor(m_ScreenWidth, m_ScreenHeight, RAYWHITE);    
+
+    UnloadImage(m_FinalImage);
+    m_FinalImage = GenImageColor(m_ScreenWidth, m_ScreenHeight, RAYWHITE);
+
+    UnloadTexture(m_Texture2D);
     m_Texture2D = LoadTextureFromImage(m_FinalImage);
+
+    m_ImageHorIter.resize(m_ScreenWidth);
+    m_ImageVerIter.resize(m_ScreenHeight);
+    for (uint32_t i = 0; i < m_ScreenWidth; i++)
+        m_ImageHorIter[i] = i;
+    for (uint32_t i = 0; i < m_ScreenHeight; i++)
+        m_ImageVerIter[i] = i;
 
     ResetFrameIndex();
 }
@@ -63,7 +80,24 @@ void Renderer::UpdateTextureBuffer()
 {
     if (m_FrameIndex == 1)
         memset(m_AccumulationData, 0, m_ScreenWidth * m_ScreenHeight * sizeof(Vector4));
+#if MT
+    std::for_each(std::execution::par, m_ImageVerIter.begin(), m_ImageVerIter.end(), [this](uint32_t y)
+        {
+            std::for_each(std::execution::par, m_ImageHorIter.begin(), m_ImageHorIter.end(), [this, y](uint32_t x)
+                {
+                    Vector4 color = PerPixel(x, y);
+                    m_AccumulationData[x + y * m_ScreenWidth] += color;
 
+                    Vector4 accumulatedColor = m_AccumulationData[x + y * m_ScreenWidth];
+                    Vector4 frameVec4 = { (float)m_FrameIndex,(float)m_FrameIndex ,(float)m_FrameIndex ,(float)m_FrameIndex };
+                    accumulatedColor = Vector4Divide(accumulatedColor, frameVec4);
+
+                    accumulatedColor = Utils::Vector4Clamp(accumulatedColor, Vector4Zero(), Vector4One());
+                    ImageDrawPixel(&m_FinalImage, x, y, ColorFromNormalized(accumulatedColor));
+                });
+
+        });
+#else
     for (uint32_t y = 0; y < m_ScreenHeight; y++)
     {
         for (uint32_t x = 0; x < m_ScreenWidth; x++)
@@ -79,6 +113,8 @@ void Renderer::UpdateTextureBuffer()
             ImageDrawPixel(&m_FinalImage, x, y, ColorFromNormalized(accumulatedColor));
         }
     }
+#endif
+
     ImageFlipVertical(&m_FinalImage);
     UpdateTexture(m_Texture2D, m_FinalImage.data);
 
@@ -125,7 +161,7 @@ Vector4 Renderer::PerPixel(uint32_t x, uint32_t y)
         multiplier *= 0.5f;
 
         ray.position = payload.WorldPosition + payload.WorldNormal * 0.0001f;
-        Vector3 randomVector = Utils::randomVec3(-0.5f, 0.5f);
+        Vector3 randomVector = RayTracing::Random::Vec3(-0.5f, 0.5f);
         randomVector *= mat.Roughness;
         ray.direction = Vector3Reflect(ray.direction, payload.WorldNormal + randomVector);
     }
