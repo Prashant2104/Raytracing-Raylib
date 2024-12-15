@@ -16,13 +16,6 @@ namespace Utils {
 
         return result;
     }
-    /*static Vector3 randomVec3(float min, float max) {
-        return Vector3{ 
-            RayTracing::Random::Float() * (max - min) + min, 
-            RayTracing::Random::Float() * (max - min) + min, 
-            RayTracing::Random::Float() * (max - min) + min 
-        };
-    }*/
 }
 
 Renderer::Renderer(const Scene& scene, const CustomCamera& camera):
