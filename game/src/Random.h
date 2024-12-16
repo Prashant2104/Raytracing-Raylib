@@ -28,6 +28,11 @@ namespace RayTracing {
             return Vector3{ Float() * (max - min) + min, Float() * (max - min) + min, Float() * (max - min) + min };
         }
 
+        static Vector3 InUnitSphere() 
+        {
+            return Vector3Normalize(Vec3(-1.0f, 1.0f));
+        }
+
     private:
         // Using thread-local storage for thread-specific random engines
         struct ThreadLocalEngine {

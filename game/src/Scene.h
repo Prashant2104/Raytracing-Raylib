@@ -2,9 +2,12 @@
 #include "raylib.h"
 #include <vector>
 struct Mat {
-    Color Albedo = ColorFromNormalized({ 1.0f, 1.0f, 1.0f, 1.0f });
+    Color Albedo = WHITE;
     float Roughness = 0.10f;
     float Metallic = 0.0f;
+    float EmissionPower = 0.0f;
+    Color EmissionColor = BLACK;
+    Vector4 GetEmission() const { return ColorNormalize(EmissionColor) * EmissionPower; }
 };
 struct Sphere {
     Vector3 Position{ 0.0f, 0.0f, 0.0f };

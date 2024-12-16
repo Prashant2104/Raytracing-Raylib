@@ -16,6 +16,14 @@ namespace Utils {
 
         return result;
     }
+    static Vector4 multiplyVector4ByVector3(const Vector4& v4, const Vector3& v3) {
+        // Multiply the first 3 components of Vector4 with Vector3
+        return Vector4{ v4.x * v3.x, v4.y * v3.y, v4.z * v3.z, v4.w };
+    }
+    static Vector3 multiplyVector3ByVector4(const Vector3& v3, const Vector4& v4) {
+        // Multiply the first 3 components of Vector4 with Vector3
+        return Vector3{ v4.x * v3.x, v4.y * v3.y, v4.z * v3.z };
+    }
 }
 
 Renderer::Renderer(const Scene& scene, const CustomCamera& camera):
@@ -129,36 +137,38 @@ Vector4 Renderer::PerPixel(uint32_t x, uint32_t y)
     ray.position = m_ActiveCamera->GetPosition();
     ray.direction = m_ActiveCamera->GetRayDirections()[x + y * m_FinalImage.width];
     
-    Vector4 color{ 0.0f };
-    float multiplier = 1.0f;
+    Vector4 light{ 0.0f };
+    Vector3 contribution = { 1.0f, 1.0f, 1.0f };
 
-    int bounces = 5;
+    int bounces = 15;
     for (int i = 0; i < bounces; i++) {
         Renderer::HitPayload payload = TraceRay(ray);
 
         if (payload.HitDistance < 0.0f) {
-            Vector4 skyColor{ 0.5f, 0.7f, 0.9f, 1.0f };
-            color += skyColor * multiplier;
+            Vector4 skyColor = Vector4Ones * 0.1f;
+            light += Utils::multiplyVector4ByVector3(skyColor, contribution);
             break;
         }
 
         const Sphere& closestSphere = m_ActiveScene->Spheres[payload.ObjectIndex];
         const Mat& mat = m_ActiveScene->Materials[closestSphere.MaterialID];
 
-        Vector3 lightDir = Vector3Normalize({ -1.0f, -1.0f, -1.0f });
+        /*Vector3 lightDir = Vector3Normalize({ -1.0f, -1.0f, -1.0f });
         float dot = Vector3DotProduct(payload.WorldNormal, Vector3Negate(lightDir));
-        float intensity = fmax(dot, 0.0f);
+        float intensity = fmax(dot, 0.0f);*/
 
-        Vector4 sphereColor = ColorNormalize(mat.Albedo) * intensity;
-        color += sphereColor * multiplier;
-        multiplier *= 0.5f;
+        Vector4 sphereColor =  ColorNormalize(mat.Albedo);// *intensity;
+        //light += Utils::multiplyVector4ByVector3(sphereColor, contribution);
+        contribution = Utils::multiplyVector3ByVector4(contribution, sphereColor);
+        light += mat.GetEmission();
 
         ray.position = payload.WorldPosition + payload.WorldNormal * 0.0001f;
         Vector3 randomVector = RayTracing::Random::Vec3(-0.5f, 0.5f);
         randomVector *= mat.Roughness;
-        ray.direction = Vector3Reflect(ray.direction, payload.WorldNormal + randomVector);
+        //ray.direction = Vector3Reflect(ray.direction, payload.WorldNormal + randomVector);
+        ray.direction = Vector3Normalize(payload.WorldNormal + RayTracing::Random::InUnitSphere());
     }
-    return Vector4{ color.x, color.y, color.z, 1.0f };
+    return Vector4{ light.x, light.y, light.z, 1.0f };
 }
 
 Renderer::HitPayload Renderer::TraceRay(const Ray& ray) const

@@ -22,8 +22,8 @@ int main(void)
     Renderer m_Renderer(m_Scene, m_Camera);
 
     int selectedMaterial = 0;
-    char name[128] = "Test.png";
-    bool drawGui = true;
+    char name[128] = "Render.png";
+    bool drawGui = false;
     //--------------------------------------------------------------------------------------
     // Main game loop
     while (!WindowShouldClose())    // Detect window close button or ESC key
@@ -43,27 +43,32 @@ int main(void)
         GuiGetStyle(DEFAULT, BACKGROUND_COLOR);
 
         m_Renderer.Render();
-        if (m_Camera.OnUpdate(GetFrameTime())) {
-            m_Renderer.ResetFrameIndex();
-        }
-
-        GuiCheckBox(Rectangle{ (float)GetScreenWidth() - 90, 50, 25, 25 }, "Show GUI", &drawGui);
-
-        if (drawGui) {
-            GuiPanel(Rectangle{ 10, 10, 200, 550 }, "UI");
-            GuiSpinner(Rectangle{ 50, 50, 100, 25 }, "S ID ", &selectedMaterial, 0, m_Scene.Materials.size() - 1, false);
-            GuiSlider(Rectangle{ 50, 100, 100, 25 }, "R Min", "R Max", &m_Scene.Materials[selectedMaterial].Roughness, 0.0f, 1.0f);
-            GuiColorPicker(Rectangle{ 50, 150, 100, 50 }, "SphereColor", &m_Scene.Materials[selectedMaterial].Albedo);
-            if (GuiButton(Rectangle{ 50, 225, 100, 30 }, "Render")) {
-                m_Renderer.ExportRender(name);
-            }
-            GuiTextInputBox(Rectangle{ 50, 275, 125, 150 }, "Image name", "What should the\nimage be called?", "Save Name", name, 25, false);
-            GuiCheckBox(Rectangle{ 50, 450, 30, 30 }, "Accumulate", &m_Renderer.GetSettings().accumulate);
-            if (GuiButton(Rectangle{ 50, 500, 100, 30 }, "Reset")) {
+        if (!drawGui) {
+            if (m_Camera.OnUpdate(GetFrameTime())) {
                 m_Renderer.ResetFrameIndex();
             }
         }
-        DrawFPS(GetScreenWidth()-90, 10);
+
+        if (drawGui) {
+            GuiPanel(Rectangle{ 10, 10, 210, 625 }, "UI");
+            GuiSpinner(Rectangle{ 50, 50, 120, 25 }, "S ID ", &selectedMaterial, 0, m_Scene.Materials.size() - 1, false);
+            GuiColorPicker(Rectangle{ 50, 90, 100, 100 }, "SphereColor", &m_Scene.Materials[selectedMaterial].Albedo);
+            GuiSlider(Rectangle{50, 205, 120, 25}, "R Min", "R Max", &m_Scene.Materials[selectedMaterial].Roughness, 0.0f, 1.0f);
+            GuiColorPicker(Rectangle{ 50, 250, 100, 100 }, "SphereColor", &m_Scene.Materials[selectedMaterial].EmissionColor);
+            GuiSlider(Rectangle{ 50, 365, 120, 25 }, "E Min", "E Max", &m_Scene.Materials[selectedMaterial].EmissionPower, 0.0f, 50.0f);
+            GuiTextBox(Rectangle{ 50, 410, 120, 30 }, name, 25, true);
+            if (GuiButton(Rectangle{ 50, 460, 120, 30 }, "Render")) {
+                m_Renderer.ExportRender(name);
+            }
+            //GuiTextInputBox(Rectangle{ 50, 460, 120, 120 }, "Image name", "Set Render Name", "Save Name", name, 25, false);
+            GuiCheckBox(Rectangle{ 50, 505, 25, 25 }, "Accumulate", &m_Renderer.GetSettings().accumulate);
+            if (GuiButton(Rectangle{ 50, 550, 120, 30 }, "Reset")) {
+                m_Renderer.ResetFrameIndex();
+            }
+            DrawText("*Close GUI to move", 50, 600, 15, MAROON);
+        }
+        DrawFPS(GetScreenWidth() - 100, 15);
+        GuiCheckBox(Rectangle{ (float)GetScreenWidth() - 100, 50, 25, 25 }, "Show GUI", &drawGui);
 
         EndDrawing();
         //----------------------------------------------------------------------------------
@@ -104,18 +109,10 @@ Scene SetupScene(void) {
     }
     {
         Mat& s = m_Scene.Materials.emplace_back();
-        s.Albedo = ColorFromNormalized({ 0.75f, 0.91f, 0.58f, 1.0f });
-        s.Roughness = 0.55f;
-    }
-    {
-        Mat& s = m_Scene.Materials.emplace_back();
-        s.Albedo = ColorFromNormalized({ 0.58f, 0.51f, 0.81f, 1.0f });
-        s.Roughness = 0.75f;
-    }
-    {
-        Mat& s = m_Scene.Materials.emplace_back();
-        s.Albedo = ColorFromNormalized({ 0.58f, 0.751f, 0.81f, 1.0f });
-        s.Roughness = 0.95f;
+        s.Albedo = ColorFromNormalized({ 0.8f, 0.5f, 0.20f, 1.0f });
+        s.Roughness = 0.25f;
+        s.EmissionColor = s.Albedo;
+        s.EmissionPower = 15.0f;
     }
 
     {
@@ -125,9 +122,9 @@ Scene SetupScene(void) {
         sphere.MaterialID = 0;
         m_Scene.Spheres.push_back(sphere);
     }
-
     {
         Sphere sphere;
+        sphere.Position = { 0.0f, 0.0f, 1.5f };
         sphere.MaterialID = 1;
         m_Scene.Spheres.push_back(sphere);
     }
@@ -147,23 +144,9 @@ Scene SetupScene(void) {
     }
     {
         Sphere sphere;
-        sphere.Position = { 1.0f, 1.5f, -1.0f };
-        sphere.Radius = 0.8f;
+        sphere.Position = { 3.5f, 5.5f, -2.2f };
+        sphere.Radius = 1.0f;
         sphere.MaterialID = 4;
-        m_Scene.Spheres.push_back(sphere);
-    }
-    {
-        Sphere sphere;
-        sphere.Position = { -1.75f, 0.5f, -1.0f };
-        sphere.Radius = 0.8f;
-        sphere.MaterialID = 5;
-        m_Scene.Spheres.push_back(sphere);
-    }
-    {
-        Sphere sphere;
-        sphere.Position = { 2.0f, 0.05f, -1.5f };
-        sphere.Radius = 0.3f;
-        sphere.MaterialID = 6;
         m_Scene.Spheres.push_back(sphere);
     }
     return m_Scene;
