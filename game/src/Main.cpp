@@ -112,7 +112,7 @@ Scene SetupScene(void) {
         s.Albedo = ColorFromNormalized({ 0.8f, 0.5f, 0.20f, 1.0f });
         s.Roughness = 0.25f;
         s.EmissionColor = s.Albedo;
-        s.EmissionPower = 15.0f;
+        s.EmissionPower = 2.50f;
     }
 
     {
@@ -130,7 +130,7 @@ Scene SetupScene(void) {
     }
     {
         Sphere sphere;
-        sphere.Position = { 1.0f, 0.15f, -1.0f };
+        sphere.Position = { 1.0f, 2.15f, -1.0f };
         sphere.Radius = 0.7f;
         sphere.MaterialID = 2;
         m_Scene.Spheres.push_back(sphere);
@@ -144,8 +144,8 @@ Scene SetupScene(void) {
     }
     {
         Sphere sphere;
-        sphere.Position = { 3.5f, 5.5f, -2.2f };
-        sphere.Radius = 1.0f;
+        sphere.Position = { 1.5f, 2.4f, 0.5f };
+        sphere.Radius = 0.80f;
         sphere.MaterialID = 4;
         m_Scene.Spheres.push_back(sphere);
     }
