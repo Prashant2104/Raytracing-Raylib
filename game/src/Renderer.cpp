@@ -173,7 +173,7 @@ Vector4 Renderer::PerPixel(uint32_t x, uint32_t y)
 
 Renderer::HitPayload Renderer::TraceRay(const Ray& ray) const
 {
-    //(bx^2 + by^2) * t^2 + (2(ax * bx + ay * by)) * t + (ax^2 + ay^2 - r^2) = 0
+    //(bx^2 + by^2) * t^2 + 2 * (ax * bx + ay * by) * t + ((ax^2 + ay^2) - r^2) = 0
     //a = ray origin
     //b = ray direction
     //r = radius
@@ -186,21 +186,27 @@ Renderer::HitPayload Renderer::TraceRay(const Ray& ray) const
         const Sphere& sphere = m_ActiveScene->Spheres[i];
         Vector3 origin = ray.position - sphere.Position;
 
-        float a = Vector3DotProduct(ray.direction, ray.direction);
-        float b = 2.0f * Vector3DotProduct(origin, ray.direction);
-        float c = Vector3DotProduct(origin, origin) - (sphere.Radius * sphere.Radius);
-
         //Quadratic formula
+        //ax^2 + bx + c = 0
+        //a = (bx^2 + by^2)
+        //b = 2 * (ax * bx + ay * by)
+        //c = (ax^2 + ay^2) - r^2
+        float a = Vector3LengthSqr(ray.direction);
+        float b = Vector3DotProduct(origin, ray.direction);
+        float c = Vector3LengthSqr(origin) - (sphere.Radius * sphere.Radius);
+
+        //Determinent of quadratic formula
         //d = b^2 - 4 * a * c
-        float d = b * b - 4.0f * a * c;
+        float d = b * b - a * c;
 
         if (d < 0.0f)
             continue;
+        //Solving for t
         //(-b +- sqrt(d)) / (2.0f * a)
         float t[] =
         {
-            (-b - sqrtf(d)) / (2.0f * a),
-            (-b + sqrtf(d)) / (2.0f * a)
+            (-b - sqrtf(d)) / (a),
+            (-b + sqrtf(d)) / (a)
         };
         if (t[0] > 0.0f && t[0] < hitDist) {
             hitDist = t[0];
