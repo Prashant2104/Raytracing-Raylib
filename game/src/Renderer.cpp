@@ -24,6 +24,30 @@ namespace Utils {
         // Multiply the first 3 components of Vector4 with Vector3
         return Vector3{ v4.x * v3.x, v4.y * v3.y, v4.z * v3.z };
     }
+    static uint32_t PCG_Hash(uint32_t input) {
+        uint32_t state = input * 747796405u + 2891336453u;
+        uint32_t word = ((state >> ((state >> 28u) + 4u)) ^ state) * 27703737u;
+        return (word >> 22u) ^ word;
+    }
+    //static uint32_t XORShift(uint32_t input) {
+    //    uint32_t state = input;
+    //    if (state == 0) state = 0x12345678;
+    //    state ^= (state << 21);       // Shift left and XOR
+    //    state ^= (state >> 35);       // Shift right and XOR
+    //    state ^= (state << 4);        // Shift left and XOR
+    //    return state * 2685821657736338717LL; // 64-bit multiplier for better randomness
+    //}
+    static float RandomFloat(uint32_t& seed) {
+        seed = PCG_Hash(seed);
+        return (float)seed / (float)std::numeric_limits<uint32_t>::max();
+    }
+    static Vector3 InUnitSphere(uint32_t& seed)
+    {
+        return Vector3Normalize(Vector3{ 
+            RandomFloat(seed) * 2.0f - 1.0f,
+            RandomFloat(seed) * 2.0f - 1.0f,
+            RandomFloat(seed) * 2.0f - 1.0f });
+    }
 }
 
 Renderer::Renderer(const Scene& scene, const CustomCamera& camera):
@@ -140,8 +164,12 @@ Vector4 Renderer::PerPixel(uint32_t x, uint32_t y)
     Vector4 light{ 0.0f };
     Vector3 contribution = { 1.0f, 1.0f, 1.0f };
 
+    uint32_t seed = x + y * m_FinalImage.width;
+    seed *= m_FrameIndex;
+
     int bounces = 15;
     for (int i = 0; i < bounces; i++) {
+        seed += i;
         Renderer::HitPayload payload = TraceRay(ray);
 
         if (payload.HitDistance < 0.0f) {
@@ -163,10 +191,11 @@ Vector4 Renderer::PerPixel(uint32_t x, uint32_t y)
         light += mat.GetEmission();
 
         ray.position = payload.WorldPosition + payload.WorldNormal * 0.0001f;
-        Vector3 randomVector = RayTracing::Random::Vec3(-0.5f, 0.5f);
-        randomVector *= mat.Roughness;
+        //Vector3 randomVector = RayTracing::Random::Vec3(-0.5f, 0.5f);
+        //randomVector *= mat.Roughness;
         //ray.direction = Vector3Reflect(ray.direction, payload.WorldNormal + randomVector);
-        ray.direction = Vector3Normalize(payload.WorldNormal + RayTracing::Random::InUnitSphere());
+        //ray.direction = Vector3Normalize(payload.WorldNormal + RayTracing::Random::InUnitSphere());
+        ray.direction = Vector3Normalize(payload.WorldNormal + Utils::InUnitSphere(seed));
     }
     return Vector4{ light.x, light.y, light.z, 1.0f };
 }

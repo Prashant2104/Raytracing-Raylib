@@ -1,3 +1,13 @@
+# Raytracer (WIP)
+Raytracer made using Raylib, used Cherno's raytracing series as basis.
+
+![Some screenshots]
+(/Screenshots/BasicLightCalculation.png)
+(/Renders/ucdbhdt.png)
+(/Renders/Render.png)
+(/Renders/Render6.png)
+
+
 # Raylib Setup using Premake5
 This is a simplified set of instructions for how to setup a project using premake.
 
