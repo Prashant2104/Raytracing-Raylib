@@ -1,7 +1,9 @@
 # Raytracer (WIP)
 Raytracer made using Raylib, used Cherno's raytracing series as basis.
 
-![Some screenshots](/Screenshots/BasicLightCalculation.png)
+![Early screenshot](/Screenshots/BasicLightCalculation.png)
+![Early Render](/Renders/ucdbhdt.png)
+![Emission](/Renders/Render6.png)
 
 
 # Raylib Setup using Premake5
